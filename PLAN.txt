@@ -1,0 +1,22 @@
+01.Wczytywanie pliku pdf
+02	-scieżka pliku - public
+03.Konwersja pdf do textu
+04	-scieżka do pliku przetworzonego - public
+05	-regular expression dni tygodnia
+06	-regular expression godziny
+07	-regular expresion zajecia
+08	-regular expresion rodzaj zajec
+09	-regular expresion dla grup i miejsca
+10.Wybór grup
+11	-GUI radio button na podstawie grup z pliku
+12.Wyświetlenie przefiltrowanych danych
+13-tabela
+14.Zapis ustawien
+15-plik konfiguracyjny
+16.Export przefiltrowanego planu do pliku pdf/dat
+
+klasy:
+	-fileOperations
+	-dataAnalysis & dataPrepare
+	-GUI (MainWindow)
+	

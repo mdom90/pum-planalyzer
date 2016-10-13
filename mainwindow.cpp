@@ -89,13 +89,17 @@ void MainWindow::loadTextFile(QString textFilePath)
        qint16 i16counter = 0;
        QTextStream in(&inputFile);
        //QTableWidget *tableView = ui->tableWidget;
-       QRegularExpression regexp("\\s+");
+       QRegularExpression regexp("\\s{2,}");//match at least 2 white spaces
        while (!in.atEnd())
        {
           i16counter++;
           QString line = in.readLine();
           QStringList LstRowData = line.split(regexp);
-          qDebug() << "line: " << i16counter << LstRowData;
+          if( 0 != line.compare("") )//not empty string
+          {
+            qDebug() << LstRowData;
+            qDebug() << "Num of col: " << LstRowData.count();
+          }
        }
        inputFile.close();
     }
