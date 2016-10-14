@@ -13,6 +13,9 @@
 #include <winnt.h>
 #include <winbase.h>
 
+#include <QTableWidget>
+#include <QHeaderView>//to streach headers in table
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -20,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 
     ui->setupUi(this);
+    uiConfigTable();
 }
 
 MainWindow::~MainWindow()
@@ -103,4 +107,13 @@ void MainWindow::loadTextFile(QString textFilePath)
        }
        inputFile.close();
     }
+}
+
+void MainWindow::uiConfigTable()
+{
+    QTableWidget *qtablew = ui->tableWidget;
+
+    qtablew->setColumnCount(tableCol);
+    qtablew->setHorizontalHeaderLabels(tableHeaders);
+    qtablew->horizontalHeader()->setStretchLastSection(true);//fit header to table size
 }

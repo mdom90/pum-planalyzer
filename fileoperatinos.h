@@ -10,13 +10,16 @@ public:
     fileOperatinos();
     QString strPdfFilePath;
     QString strTxtFilePath;
+    const QString strConvTxtFilePath;
 
 private:
     QString strPdfConverterRPath;
     QStringList slstConverterArguments;
+    QStringList qslBaseFileInMemory;
 
-    bool foConvertPdf();
-    bool foLoadTextFile();
+    bool foConvertPdf(QString strPdfFilePath);
+    bool foConvertTextFile(QString strTxtFilePath);
+    bool foPrepareWriteFile(QFile *qFileToCheck);
     bool foSaveData();
 
 };

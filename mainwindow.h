@@ -26,7 +26,10 @@ private:
     void convertPdf();
     void loadTextFile(QString qstrFilePath);
     void updatePlanList();
+    void uiConfigTable();
 
+    const qint8 tableCol = 5;
+    const QStringList tableHeaders = {"Od", "Do", "Przemdiot", "Rodzaj", "Grupa // Gdzie"};
     QString filePath;
     QString pdfFilePath;
 };
