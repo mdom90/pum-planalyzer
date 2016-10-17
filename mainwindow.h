@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "fileoperatinos.h"
 
 namespace Ui {
 class MainWindow;
@@ -22,9 +23,8 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    fileOperatinos *foInstance;
 
-    void convertPdf();
-    void loadTextFile(QString qstrFilePath);
     void updatePlanList();
     void uiConfigTable();
 
