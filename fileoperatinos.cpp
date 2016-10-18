@@ -106,63 +106,107 @@ bool fileOperatinos::foPrepareWriteFile(QFile *qFileToCheck)
 bool fileOperatinos::foAnalyzeFile(QTextStream *in)
 {
     bool fRetVal = false;
+    QStringList qstrlMainList;
+    qint8 u8MinimumNrOfColumns = 4;
 
     if( 0 != in )
     {
         bool fSaveData = false;
-        bool fAppendLine = false;
         QString line;
         QStringList lstRowData;
-        QStringList lstConcatExtraLine;
         QRegularExpression regexp("\\s{2,}");//match at least 2 white spaces
         while (!in->atEnd())
         {
            line = in->readLine();
-           if( 0 == line.compare("") )//skip empty string
+           if( line.isEmpty() )//skip empty string
            {
                continue;
            }
            lstRowData = line.split(regexp);//split QString to have line elements in list elements
-           foAnalyzeLine(&lstRowData, &fSaveData, &fAppendLine);
-           if( (true = fSaveData) && (true == fAppendLine) )
-           {
 
-           }
-           if( (true == fSaveData) && (false == fAppendLine) )
+           fRetVal = foDoesContainWeekDay(&lstRowData);
+           //Append week day to main list buffor & start save data from monday
+           if(fRetVal)
            {
-               line = lstRowData.join(";");
-               qDebug() << line;
+                lstRowData.append("\r\n");
+                qstrlMainList << lstRowData;
+                fSaveData = true;
+                continue;
+           }
+           //Remove "-" and finish save data at "Uwaga"
+           foAnalyzeLine(&lstRowData, &fSaveData);
+           if( (true == fSaveData) && (lstRowData.count() < u8MinimumNrOfColumns) )
+           {
+               foAppendLineToList(&qstrlMainList, &lstRowData);
+               continue;
+           }
+           if( true == fSaveData )
+           {
+               qstrlMainList << lstRowData;
+               //qDebug() << lstRowData;
            }
              //qDebug() << "Num of col: " << lstRowData.count();
+        }
+        qDebug() << qstrlMainList;
+    }
+    return fRetVal;
+}
+
+bool fileOperatinos::foAnalyzeLine(QStringList *qstrlLineToAnalyze, bool* fStartSaveData)
+{
+    bool fRetVal = false;
+
+    if( (0 != qstrlLineToAnalyze) && (0 != fStartSaveData) )
+    {
+        qstrlLineToAnalyze->removeAll("-");
+        //Save till Uwaga
+        if( qstrlLineToAnalyze->contains("UWAGI", Qt::CaseInsensitive))
+            *fStartSaveData = false;
+
+        fRetVal = true;
+    }
+
+    return fRetVal;
+}
+
+bool fileOperatinos::foAppendLineToList(QStringList *qstrlMainList, QStringList *qstrlListToAppend)
+{
+    bool fRetVal = true;
+    int indexOfGroupElement = -1;
+    int indexOfSubjectElement = -1;
+    if( (0 != qstrlMainList) && (qstrlListToAppend != 0))
+    {
+        QRegularExpression regexpFindGroup(".*\\d+.", QRegularExpression::CaseInsensitiveOption);  //("(/w+/d)|(/d)|(/w{1})");
+        QRegularExpression regexpFindSubject("\\w+[^0-9]", QRegularExpression::CaseInsensitiveOption); // find words not containng numbers
+
+        indexOfGroupElement = qstrlListToAppend->lastIndexOf(regexpFindGroup);
+        indexOfSubjectElement = qstrlListToAppend->lastIndexOf(regexpFindSubject);
+        //qDebug() << "String: " << *qstrlListToAppend;
+        if( indexOfGroupElement > -1 )
+        {
+            //qDebug() << "Grupa: " << qstrlListToAppend->at(indexOfGroupElement);
+            qstrlMainList->last() += " " + qstrlListToAppend->at(indexOfGroupElement) + "\r\n";
+        }
+        if( indexOfSubjectElement > -1 )
+        {
+            //qDebug() << "Subject: " << qstrlListToAppend->at(indexOfSubjectElement);
         }
     }
     return fRetVal;
 }
 
-bool fileOperatinos::foAnalyzeLine(QStringList *qstrlLineToAnalyze, bool* fStartSaveData, bool* fAppendLine)
+ bool fileOperatinos::foDoesContainWeekDay(QStringList *qstrAnalyseList)
 {
     bool fRetVal = false;
-
-    if( (0 != qstrlLineToAnalyze) && (0 != fStartSaveData) && (0 != fAppendLine) )
+    if( 0 != qstrAnalyseList)
     {
-        qstrlLineToAnalyze->removeAll("-");
-        //Start saving data to file from Monday
-        if( qstrlLineToAnalyze->contains("poniedziałek", Qt::CaseInsensitive) )
-            *fStartSaveData = true;
-        //Save till Uwaga
-        if( qstrlLineToAnalyze->contains("UWAGI", Qt::CaseInsensitive))
-            *fStartSaveData = false;
-        if( qstrlLineToAnalyze->count() < 5 )
+        QRegularExpression regexWeekDays("poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela", QRegularExpression::CaseInsensitiveOption);
+        QString line = qstrAnalyseList->join(" ");
+        if(line.contains(regexWeekDays))
         {
-            *fAppendLine = true;
+            fRetVal = true;
+            qDebug() << "Week day" << line;
         }
-        else
-        {
-            fAppendLine = false;
-        }
-
-        fRetVal = true;
     }
-
     return fRetVal;
 }

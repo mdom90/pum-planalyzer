@@ -43,9 +43,13 @@ private:
     bool foConvertTextFile(QString strTxtFilePath);
     //Analyze qStringList line, and modify it to give back
     //only interesting data
-    bool foAnalyzeLine(QStringList *pqstrlAnalyzeLine, bool* fStartSaveData, bool* fAppendLine);
+    bool foAnalyzeLine(QStringList *pqstrlAnalyzeLine, bool* fStartSaveData);
     //Analyze text file, help to convert data to csv
     bool foAnalyzeFile(QTextStream* in);
+    //Append not full line to main line
+    bool foAppendLineToList(QStringList *qstrlMainList, QStringList *qstrlListToAppend);
+    //Analayze if there is weekday in list, if yes return true
+    bool foDoesContainWeekDay(QStringList *qstrAnalyseList);
     //Prapare orderFile.txt for writing. Delete if it was created before
     // and create new empty one
     bool foPrepareWriteFile(QFile *qFileToCheck);
