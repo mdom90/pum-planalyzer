@@ -68,27 +68,10 @@ bool fileOperatinos::foConvertTextFile(QString strTxtFilePath)
     {
        QTextStream in(&inputFile);
        QTextStream out(&outputFile);
-       QRegularExpression regexp("\\s{2,}");//match at least 2 white spaces
-       bool fSaveData = false;
        in.setCodec("UTF-8");
 
-       //TODO Consider new function
-       while (!in.atEnd())
-       {
-          QString line = in.readLine();
-          if( 0 != line.compare("") )//skip empty string
-          {
-            QStringList lstRowData = line.split(regexp);//split QString to have line elements in list elements
-            foAnalyzeLine(&lstRowData, &fSaveData);
-            if(fSaveData)
-            {
-                line = lstRowData.join(";");
-                qDebug() << line;
+       foAnalyzeFile(&in);
 
-            }
-            //qDebug() << "Num of col: " << lstRowData.count();
-          }
-       }
        outputFile.close();
        inputFile.close();
     }
@@ -120,11 +103,47 @@ bool fileOperatinos::foPrepareWriteFile(QFile *qFileToCheck)
     return fRetVal;
 }
 
-bool fileOperatinos::foAnalyzeLine(QStringList *qstrlLineToAnalyze, bool* fStartSaveData)
+bool fileOperatinos::foAnalyzeFile(QTextStream *in)
 {
     bool fRetVal = false;
 
-    if( (0 != qstrlLineToAnalyze) && (0 != fStartSaveData) )
+    if( 0 != in )
+    {
+        bool fSaveData = false;
+        bool fAppendLine = false;
+        QString line;
+        QStringList lstRowData;
+        QStringList lstConcatExtraLine;
+        QRegularExpression regexp("\\s{2,}");//match at least 2 white spaces
+        while (!in->atEnd())
+        {
+           line = in->readLine();
+           if( 0 == line.compare("") )//skip empty string
+           {
+               continue;
+           }
+           lstRowData = line.split(regexp);//split QString to have line elements in list elements
+           foAnalyzeLine(&lstRowData, &fSaveData, &fAppendLine);
+           if( (true = fSaveData) && (true == fAppendLine) )
+           {
+
+           }
+           if( (true == fSaveData) && (false == fAppendLine) )
+           {
+               line = lstRowData.join(";");
+               qDebug() << line;
+           }
+             //qDebug() << "Num of col: " << lstRowData.count();
+        }
+    }
+    return fRetVal;
+}
+
+bool fileOperatinos::foAnalyzeLine(QStringList *qstrlLineToAnalyze, bool* fStartSaveData, bool* fAppendLine)
+{
+    bool fRetVal = false;
+
+    if( (0 != qstrlLineToAnalyze) && (0 != fStartSaveData) && (0 != fAppendLine) )
     {
         qstrlLineToAnalyze->removeAll("-");
         //Start saving data to file from Monday
@@ -133,6 +152,16 @@ bool fileOperatinos::foAnalyzeLine(QStringList *qstrlLineToAnalyze, bool* fStart
         //Save till Uwaga
         if( qstrlLineToAnalyze->contains("UWAGI", Qt::CaseInsensitive))
             *fStartSaveData = false;
+        if( qstrlLineToAnalyze->count() < 5 )
+        {
+            *fAppendLine = true;
+        }
+        else
+        {
+            fAppendLine = false;
+        }
+
+        fRetVal = true;
     }
 
     return fRetVal;

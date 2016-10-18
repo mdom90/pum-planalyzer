@@ -6,6 +6,7 @@
 //exec pdf converter
 #include <QProcess>
 #include <QObject>
+#include <QTextStream>
 
 
 class fileOperatinos
@@ -42,7 +43,9 @@ private:
     bool foConvertTextFile(QString strTxtFilePath);
     //Analyze qStringList line, and modify it to give back
     //only interesting data
-    bool foAnalyzeLine(QStringList *pqstrlAnalyzeLine, bool* fStartSaveData);
+    bool foAnalyzeLine(QStringList *pqstrlAnalyzeLine, bool* fStartSaveData, bool* fAppendLine);
+    //Analyze text file, help to convert data to csv
+    bool foAnalyzeFile(QTextStream* in);
     //Prapare orderFile.txt for writing. Delete if it was created before
     // and create new empty one
     bool foPrepareWriteFile(QFile *qFileToCheck);
