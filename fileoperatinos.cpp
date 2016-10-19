@@ -125,10 +125,8 @@ bool fileOperatinos::foAnalyzeFile(QTextStream *in)
            lstRowData = line.split(regexp);//split QString to have line elements in list elements
 
            fRetVal = foDoesContainWeekDay(&lstRowData);
-           //Append week day to main list buffor & start save data from monday
            if(fRetVal)
-           {
-                lstRowData.append("\r\n");
+           {//Append week day to main list buffor & start save data from monday
                 qstrlMainList << lstRowData;
                 fSaveData = true;
                 continue;
@@ -136,14 +134,14 @@ bool fileOperatinos::foAnalyzeFile(QTextStream *in)
            //Remove "-" and finish save data at "Uwaga"
            foAnalyzeLine(&lstRowData, &fSaveData);
            if( (true == fSaveData) && (lstRowData.count() < u8MinimumNrOfColumns) )
-           {
+           {//Check if part of data is in new line, if yes, append to previous line
                foAppendLineToList(&qstrlMainList, &lstRowData);
                continue;
            }
            if( true == fSaveData )
-           {
+           {//Normal line
+               lstRowData.append("\r\n");
                qstrlMainList << lstRowData;
-               //qDebug() << lstRowData;
            }
              //qDebug() << "Num of col: " << lstRowData.count();
         }
@@ -174,9 +172,9 @@ bool fileOperatinos::foAppendLineToList(QStringList *qstrlMainList, QStringList 
     bool fRetVal = true;
     int indexOfGroupElement = -1;
     int indexOfSubjectElement = -1;
-    if( (0 != qstrlMainList) && (qstrlListToAppend != 0))
+    if( (0 != qstrlMainList) && (0 != qstrlListToAppend))
     {
-        QRegularExpression regexpFindGroup(".*\\d+.", QRegularExpression::CaseInsensitiveOption);  //("(/w+/d)|(/d)|(/w{1})");
+        QRegularExpression regexpFindGroup(".*\\d+", QRegularExpression::CaseInsensitiveOption); //".*\\d+."  //("(/w+/d)|(/d)|(/w{1})");
         QRegularExpression regexpFindSubject("\\w+[^0-9]", QRegularExpression::CaseInsensitiveOption); // find words not containng numbers
 
         indexOfGroupElement = qstrlListToAppend->lastIndexOf(regexpFindGroup);
@@ -189,6 +187,9 @@ bool fileOperatinos::foAppendLineToList(QStringList *qstrlMainList, QStringList 
         }
         if( indexOfSubjectElement > -1 )
         {
+            qint16 lastIndexOfHour = qstrlMainList->lastIndexOf(QRegularExpression("\\d{1,2}\.\\d{1,2}")); //match last hour
+            lastIndexOfHour++;//switch to next column - which should be subject
+            qstrlMainList->replace(lastIndexOfHour, (" " + qstrlListToAppend->at(indexOfSubjectElement) + "\r\n"));
             //qDebug() << "Subject: " << qstrlListToAppend->at(indexOfSubjectElement);
         }
     }
@@ -201,10 +202,11 @@ bool fileOperatinos::foAppendLineToList(QStringList *qstrlMainList, QStringList 
     if( 0 != qstrAnalyseList)
     {
         QRegularExpression regexWeekDays("poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela", QRegularExpression::CaseInsensitiveOption);
-        QString line = qstrAnalyseList->join(" ");
+        QString line = qstrAnalyseList->join(" "); // convert to QString
         if(line.contains(regexWeekDays))
         {
             fRetVal = true;
+            qstrAnalyseList->append("\r\n"); // new line after week day
             qDebug() << "Week day" << line;
         }
     }
