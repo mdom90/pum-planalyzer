@@ -56,6 +56,7 @@ bool fileOperatinos::foConvertTextFile(QString strTxtFilePath)
     bool fRetVal = true;
     QFile inputFile(strTxtFilePath);
     QFile outputFile(this->strConvTxtFilePath);
+    eSaveData enumTempAnalyseData = LAST_ITEM;
 
     fRetVal = foPrepareWriteFile(&outputFile);
     if(fRetVal)
@@ -68,9 +69,23 @@ bool fileOperatinos::foConvertTextFile(QString strTxtFilePath)
     {
        QTextStream in(&inputFile);
        QTextStream out(&outputFile);
+       QString qstrMainBuffor;
+       QString line;
+       QString line2;
        in.setCodec("UTF-8");
-
-       foAnalyzeFile(&in);
+       while (!in.atEnd())
+       {
+           line = in.readLine();
+           if(!in.atEnd())
+           {
+               line2 = in.readLine();
+           }
+           foShouldAnalyseBuffer(&line, &enumTempAnalyseData);
+           if( SAVE == enumTempAnalyseData )
+           {
+                fRetVal = foGeneralAnalyzeLine(&line, &qstrMainBuffor);
+           }
+       }
 
        outputFile.close();
        inputFile.close();
@@ -103,112 +118,143 @@ bool fileOperatinos::foPrepareWriteFile(QFile *qFileToCheck)
     return fRetVal;
 }
 
-bool fileOperatinos::foAnalyzeFile(QTextStream *in)
+bool fileOperatinos::foGeneralAnalyzeLine(QString *qstrLineToAnalyze, QString *qstrMainBuffor)
 {
     bool fRetVal = false;
-    QStringList qstrlMainList;
+    static QStringList qstrlPreviousLine;
+    static qint8 q8ExecuteCounter = 0;
     qint8 u8MinimumNrOfColumns = 4;
 
-    if( 0 != in )
+    if( (0 != qstrLineToAnalyze) && (0 != qstrMainBuffor) )
     {
-        bool fSaveData = false;
-        QString line;
-        QStringList lstRowData;
-        QRegularExpression regexp("\\s{2,}");//match at least 2 white spaces
-        while (!in->atEnd())
-        {
-           line = in->readLine();
-           if( line.isEmpty() )//skip empty string
-           {
-               continue;
-           }
-           lstRowData = line.split(regexp);//split QString to have line elements in list elements
+       q8ExecuteCounter++;
+       foRemoveUnecessarySigns(qstrLineToAnalyze);
 
-           fRetVal = foDoesContainWeekDay(&lstRowData);
-           if(fRetVal)
-           {//Append week day to main list buffor & start save data from monday
-                qstrlMainList << lstRowData;
-                fSaveData = true;
-                continue;
-           }
-           //Remove "-" and finish save data at "Uwaga"
-           foAnalyzeLine(&lstRowData, &fSaveData);
-           if( (true == fSaveData) && (lstRowData.count() < u8MinimumNrOfColumns) )
-           {//Check if part of data is in new line, if yes, append to previous line
-               foAppendLineToList(&qstrlMainList, &lstRowData);
-               continue;
-           }
-           if( true == fSaveData )
-           {//Normal line
-               lstRowData.append("\r\n");
-               qstrlMainList << lstRowData;
-           }
-             //qDebug() << "Num of col: " << lstRowData.count();
-        }
-        qDebug() << qstrlMainList;
+       QRegularExpression regex("\\s{2,}");//match at least 2 white spaces
+       QStringList lstCurrentRowData = qstrLineToAnalyze->split(regex, QString::SkipEmptyParts);//split QString to have line elements in list elements
+       if( (false == foIsWeekDay(*qstrLineToAnalyze)) && (lstCurrentRowData.count() < u8MinimumNrOfColumns) )
+       {//Append data to previous line
+           foAppendLineToList(&qstrlPreviousLine, &lstCurrentRowData);
+       }
+       else
+       {//Normal line
+           qstrlPreviousLine = lstCurrentRowData;//Set previous line
+       }
+
+
+
+       if( q8ExecuteCounter >= 2 )
+       {
+           qDebug() << qstrlPreviousLine;
+           q8ExecuteCounter = 0;
+       }
+       //qDebug() << *qstrLineToAnalyze;
+    /*
+       if( (true == fSaveData) && (lstRowData.count() < u8MinimumNrOfColumns) )
+       {//Check if part of data is in new line, if yes, append to previous line
+           foAppendLineToList(&qstrlMainList, &lstRowData);
+           continue;
+       }
+       if( true == fSaveData )
+       {//Normal line
+           lstRowData.append("\r\n");
+           qstrlMainList << lstRowData;
+       }
+         //qDebug() << "Num of col: " << lstRowData.count();
+
+       qDebug() << qstrlMainList;
+    */
     }
+
     return fRetVal;
 }
 
-bool fileOperatinos::foAnalyzeLine(QStringList *qstrlLineToAnalyze, bool* fStartSaveData)
+bool fileOperatinos::foRemoveUnecessarySigns(QString *qstrlLineToAnalyze)
 {
     bool fRetVal = false;
 
-    if( (0 != qstrlLineToAnalyze) && (0 != fStartSaveData) )
+    if( (0 != qstrlLineToAnalyze) )
     {
-        qstrlLineToAnalyze->removeAll("-");
-        //Save till Uwaga
-        if( qstrlLineToAnalyze->contains("UWAGI", Qt::CaseInsensitive))
-            *fStartSaveData = false;
-
+        QRegularExpression regex("\\s{2,}");//match at least 2 white spaces
+        QStringList tmpList = qstrlLineToAnalyze->split(regex, QString::SkipEmptyParts);
+        tmpList.removeAll("-");
+        *qstrlLineToAnalyze = tmpList.join("  ");
         fRetVal = true;
     }
-
     return fRetVal;
 }
 
-bool fileOperatinos::foAppendLineToList(QStringList *qstrlMainList, QStringList *qstrlListToAppend)
+bool fileOperatinos::foAppendLineToList(QStringList *qstrlPreviousLineList, QStringList *qstrlListToAppend)
 {
     bool fRetVal = true;
     int indexOfGroupElement = -1;
     int indexOfSubjectElement = -1;
-    if( (0 != qstrlMainList) && (0 != qstrlListToAppend))
+    if( (0 != qstrlPreviousLineList) && (0 != qstrlListToAppend))
     {
+        QStringList tmpData = *qstrlListToAppend;
         QRegularExpression regexpFindGroup(".*\\d+", QRegularExpression::CaseInsensitiveOption); //".*\\d+."  //("(/w+/d)|(/d)|(/w{1})");
         QRegularExpression regexpFindSubject("\\w+[^0-9]", QRegularExpression::CaseInsensitiveOption); // find words not containng numbers
 
-        indexOfGroupElement = qstrlListToAppend->lastIndexOf(regexpFindGroup);
-        indexOfSubjectElement = qstrlListToAppend->lastIndexOf(regexpFindSubject);
+        indexOfGroupElement = tmpData.lastIndexOf(regexpFindGroup);
+        indexOfSubjectElement = tmpData.lastIndexOf(regexpFindSubject);
         //qDebug() << "String: " << *qstrlListToAppend;
         if( indexOfGroupElement > -1 )
         {
             //qDebug() << "Grupa: " << qstrlListToAppend->at(indexOfGroupElement);
-            qstrlMainList->last() += " " + qstrlListToAppend->at(indexOfGroupElement) + "\r\n";
+            qstrlListToAppend->last() += " " + tmpData->at(indexOfGroupElement);
         }
-        if( indexOfSubjectElement > -1 )
+       /* if( indexOfSubjectElement > -1 )
         {
-            qint16 lastIndexOfHour = qstrlMainList->lastIndexOf(QRegularExpression("\\d{1,2}\.\\d{1,2}")); //match last hour
+            qint16 lastIndexOfHour = qstrlPreviousLineList->lastIndexOf(QRegularExpression("\\d{1,2}\.\\d{1,2}")); //match last hour
             lastIndexOfHour++;//switch to next column - which should be subject
-            qstrlMainList->replace(lastIndexOfHour, (" " + qstrlListToAppend->at(indexOfSubjectElement) + "\r\n"));
-            //qDebug() << "Subject: " << qstrlListToAppend->at(indexOfSubjectElement);
+            qstrlPreviousLineList->replace(lastIndexOfHour, (" " + qstrlListToAppend->at(indexOfSubjectElement)) );
+            qDebug() << "Subject: " << qstrlListToAppend->at(lastIndexOfHour);
+        }*/
+    }
+    return fRetVal;
+}
+
+ bool fileOperatinos::foShouldAnalyseBuffer(QString *qstrAnalyse, eSaveData *enumSaveData)
+{
+    bool fRetVal = false;
+    if( (0 != qstrAnalyse) && (0 != enumSaveData))
+    {
+        static eSaveData enumSaveDataLastState = LAST_ITEM;
+        fRetVal = true;
+
+        if(qstrAnalyse->isEmpty())//Dont analyse if empty line
+        {
+            *enumSaveData = DONT_SAVE;
+            return fRetVal;
+        }
+        if( foIsWeekDay(*qstrAnalyse) )//Analyse interesiting data
+        {
+            *enumSaveData = SAVE;
+            enumSaveDataLastState = *enumSaveData;
+            return fRetVal;
+        }
+        else if(qstrAnalyse->contains("UWAGI", Qt::CaseInsensitive))//Finish analysing interesting data
+        {
+            *enumSaveData = DONT_SAVE;
+            enumSaveDataLastState = *enumSaveData;
+            return fRetVal;
+        }
+        else//Continue last mode
+        {
+            *enumSaveData = enumSaveDataLastState;
+            return fRetVal;
         }
     }
     return fRetVal;
 }
 
- bool fileOperatinos::foDoesContainWeekDay(QStringList *qstrAnalyseList)
-{
+ bool fileOperatinos::foIsWeekDay(QString qstrAnalyseLine)
+ {
     bool fRetVal = false;
-    if( 0 != qstrAnalyseList)
+    QRegularExpression regexWeekDays("poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela", QRegularExpression::CaseInsensitiveOption);
+    if(qstrAnalyseLine.contains(regexWeekDays))
     {
-        QRegularExpression regexWeekDays("poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela", QRegularExpression::CaseInsensitiveOption);
-        QString line = qstrAnalyseList->join(" "); // convert to QString
-        if(line.contains(regexWeekDays))
-        {
-            fRetVal = true;
-            qstrAnalyseList->append("\r\n"); // new line after week day
-            qDebug() << "Week day" << line;
-        }
+        fRetVal = true;
     }
     return fRetVal;
-}
+ }
