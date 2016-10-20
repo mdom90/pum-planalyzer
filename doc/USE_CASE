@@ -1,0 +1,79 @@
+Use case:
+1.
+-poniedzialek
+-normal line
+GO: line1 = poniedzialek; line1 = \r\nponiedzialek\r\n; storeCounter = 1; lastLine="\r\nponiedzialek\r\n";
+	line1 = normalLine; storeCounter=2; strBuffer = "\r\nponiedzialek\r\nnormalLine\r\n"; storeCounter = 0;
+OK
+Result:
+[]
+poniedzialek
+normalLine
+[]
+
+2. impossible?
+-poniedzialek
+-short line
+
+3.
+-normal line1
+-normal line2
+GO: line1 = normalLine1; storeCounter=1; lastLine = normalLine1
+	line2 = normalLine2; storeCounter=2; strBuffer = normalLine1+normalLine2\r\n; strCounter=0;
+OK, consider normalLine1 + " " + normalLine2
+
+4.
+-normal line
+-wtorek
+GO: line1 = normalLine; storeCounter=1; latLine = normalLine;
+	line1 = wtorek; line1 = \r\nwtorek\r\n; storeCounter=2; strBuffer = normalLine+\r\nwtorek\r\n\r\n
+OK
+Result
+normalLine
+wtorek
+	
+	
+5.
+-wtorek
+-normal line
+GO:	line1 = wtorek; line1= \r\nwtorek\r\n; storeCounter=1; lastLine=\r\nwtorek\r\n
+	line1= normalLine; storeCounter=2; strBuffer = \r\nwtorek\r\nnormalLine\rn
+6.
+-poniedzialek
+-eof
+GO: line1 = poeniedzialek; line1= \r\nponiedzialek\r\n; storeCounter=1; lastLine=\r\nponiedzialek\r\n;
+	
+
+7.
+-eof
+OK
+
+9.
+-norma line
+-not interesting data
+OK
+----
+
+10.
+-normal line
+-short group
+
+11.
+-normal line
+-short subject
+
+12.
+-normal line
+-short subject&group
+
+13.
+-short group
+-normal line
+
+14.
+-short subject
+-normal line
+
+15.
+-short subject&group
+-normalLine

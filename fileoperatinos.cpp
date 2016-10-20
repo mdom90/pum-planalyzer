@@ -70,21 +70,13 @@ bool fileOperatinos::foConvertTextFile(QString strTxtFilePath)
        QTextStream in(&inputFile);
        QTextStream out(&outputFile);
        QString qstrMainBuffor;
-       QString line;
-       QString line2;
        in.setCodec("UTF-8");
-       while (!in.atEnd())
+       qstrMainBuffor = in.readAll();
+       foShouldAnalyseBuffer(&line, &enumTempAnalyseData);
+       if( SAVE == enumTempAnalyseData )
        {
-           line = in.readLine();
-           if(!in.atEnd())
-           {
-               line2 = in.readLine();
-           }
-           foShouldAnalyseBuffer(&line, &enumTempAnalyseData);
-           if( SAVE == enumTempAnalyseData )
-           {
-                fRetVal = foGeneralAnalyzeLine(&line, &qstrMainBuffor);
-           }
+            fRetVal = foGeneralAnalyzeLine(&line, &qstrMainBuffor);
+       }
        }
 
        outputFile.close();
