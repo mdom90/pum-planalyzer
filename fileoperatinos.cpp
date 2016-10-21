@@ -4,6 +4,8 @@
 #include <QDebug>
 #include <QCoreApplication>
 
+#define MAX_LINE_IN_ANALYSIS 2
+
 fileOperatinos::fileOperatinos()
 {
     qstrBasePath = QCoreApplication::applicationDirPath();
@@ -56,7 +58,7 @@ bool fileOperatinos::foConvertTextFile(QString strTxtFilePath)
     bool fRetVal = true;
     QFile inputFile(strTxtFilePath);
     QFile outputFile(this->strConvTxtFilePath);
-    eSaveData enumTempAnalyseData = LAST_ITEM;
+    eAnalyse eShouldAnalyse = LAST_ITEM;
 
     fRetVal = foPrepareWriteFile(&outputFile);
     if(fRetVal)
@@ -69,16 +71,25 @@ bool fileOperatinos::foConvertTextFile(QString strTxtFilePath)
     {
        QTextStream in(&inputFile);
        QTextStream out(&outputFile);
-       QString qstrMainBuffor;
+       QString qstrMainBuffer;
        in.setCodec("UTF-8");
-       qstrMainBuffor = in.readAll();
-       foShouldAnalyseBuffer(&line, &enumTempAnalyseData);
-       if( SAVE == enumTempAnalyseData )
+       while(!in.atEnd())
        {
-            fRetVal = foGeneralAnalyzeLine(&line, &qstrMainBuffor);
+           this->s_LineToAnalyse.qstrCurrentLine = in.readLine();
+           foShouldAnalyseLine(&eShouldAnalyse);
+           switch(eShouldAnalyse)
+           {
+               case DONT_ANALYSE:
+               {
+                  continue;
+               }
+               case ANALYSE:
+               {
+                   fRetVal = foAnalyzeLine(&qstrMainBuffer);
+                   break;
+               }
+           }
        }
-       }
-
        outputFile.close();
        inputFile.close();
     }
@@ -110,55 +121,138 @@ bool fileOperatinos::foPrepareWriteFile(QFile *qFileToCheck)
     return fRetVal;
 }
 
-bool fileOperatinos::foGeneralAnalyzeLine(QString *qstrLineToAnalyze, QString *qstrMainBuffor)
+bool fileOperatinos::foAnalyzeLine(QString *qstrMainBuffer)
 {
     bool fRetVal = false;
-    static QStringList qstrlPreviousLine;
-    static qint8 q8ExecuteCounter = 0;
-    qint8 u8MinimumNrOfColumns = 4;
+    const quint8 u8MinimumNrOfColumns = 4;
 
-    if( (0 != qstrLineToAnalyze) && (0 != qstrMainBuffor) )
+    if( (0 != qstrMainBuffor) )
     {
-       q8ExecuteCounter++;
-       foRemoveUnecessarySigns(qstrLineToAnalyze);
-
        QRegularExpression regex("\\s{2,}");//match at least 2 white spaces
-       QStringList lstCurrentRowData = qstrLineToAnalyze->split(regex, QString::SkipEmptyParts);//split QString to have line elements in list elements
-       if( (false == foIsWeekDay(*qstrLineToAnalyze)) && (lstCurrentRowData.count() < u8MinimumNrOfColumns) )
-       {//Append data to previous line
-           foAppendLineToList(&qstrlPreviousLine, &lstCurrentRowData);
+       QStringList qstrlCurrentLine = this->s_LineToAnalyse.qstrCurrentLine.split(regex, QString::SkipEmptyParts);//split QString to have line elements in list elements
+       if(qstrlCurrentLine.count() > u8MinimumNrOfColumns)
+       {//Nomral line
+
        }
        else
-       {//Normal line
-           qstrlPreviousLine = lstCurrentRowData;//Set previous line
-       }
+       {//Short line
+            if(foIsWeekDay(*qstrLineToAnalyze))
+            {
+                *qstrLineToAnalyze = ("\r\n" + (*qstrLineToAnalyze) + "\r\n");
+                q8StoreCounter++;
 
-
-
-       if( q8ExecuteCounter >= 2 )
-       {
-           qDebug() << qstrlPreviousLine;
-           q8ExecuteCounter = 0;
+            }
        }
-       //qDebug() << *qstrLineToAnalyze;
-    /*
-       if( (true == fSaveData) && (lstRowData.count() < u8MinimumNrOfColumns) )
-       {//Check if part of data is in new line, if yes, append to previous line
-           foAppendLineToList(&qstrlMainList, &lstRowData);
-           continue;
-       }
-       if( true == fSaveData )
-       {//Normal line
-           lstRowData.append("\r\n");
-           qstrlMainList << lstRowData;
-       }
-         //qDebug() << "Num of col: " << lstRowData.count();
-
-       qDebug() << qstrlMainList;
-    */
     }
-
     return fRetVal;
+}
+
+bool fileOperatinos::foAnalyzeNormalLine(QString *qstrMainBuffer)
+{
+    bool fRetVal = false;
+
+    if( 0 != qstrMainBuffer )
+    {
+        fRetVal = true;
+        this->s_LineToAnalyse.qu8StoreCounter++;
+        if( this->s_LineToAnalyse.qu8StoreCounter >= MAX_LINE_IN_ANALYSIS )
+        {
+            this->s_LineToAnalyse.qstrSaveBuffer = this->s_LineToAnalyse.qstrLastLine + this->s_LineToAnalyse.qstrCurrentLine;
+            fRetVal = foStoreToMainBuffer(qstrMainBuffer);
+            foCleanAnalyseData();
+        }
+        else
+        {
+            this->s_LineToAnalyse.qstrLastLine = this->s_LineToAnalyse.qstrCurrentLine;
+        }
+    }
+    return fRetVal;
+}
+
+
+bool fileOperatinos::foAnalyzeShortLine(QString *qstrMainBuffer)
+{
+    bool fRetVal = false;
+    if( 0 != qstrMainBuffer )
+    {
+        fRetVal = true;
+        if(foIsWeekDay(this->s_LineToAnalyse.qstrCurrentLine))
+        {
+            this->s_LineToAnalyse.qstrCurrentLine = "\r\n" + this->s_LineToAnalyse.qstrCurrentLine + "\r\n";
+            this->s_LineToAnalyse.qu8StoreCounter++;
+            if( this->s_LineToAnalyse.qu8StoreCounter >= MAX_LINE_IN_ANALYSIS )
+            {
+                this->s_LineToAnalyse.qstrSaveBuffer = this->s_LineToAnalyse.qstrLastLine + this->s_LineToAnalyse.qstrCurrentLine;
+                fRetVal = foStoreToMainBuffer(qstrMainBuffer);
+                foCleanAnalyseData();
+            }
+        }
+        else if( this->s_LineToAnalyse.qu8StoreCounter > 0 )
+        {//Special line to analyse
+            eAppendType appendType = LAST_ITEM;
+            QString qstrGroup = "";
+            QString qstrSubject = "";
+
+            appendType = foFindGroup(&qstrGroup);
+            appendType |= foFindGroup(&qstrSubject);
+
+            switch(appendType)
+            {
+                case GROUP:
+                {
+                    break;
+                }
+                case SUBJECT:
+                {
+                    break;
+                }
+                case BOTH:
+                {
+                    break;
+                }
+                case  NOTHING:
+                default:
+                {//Some shit in line
+                    foCleanAnalyseData();
+                }
+            }
+        }
+        else
+        {//This should never happened. To do this scenario should be: shortLine_not_weekDay, normalLine
+            //Nothing to do in here
+        }
+    }
+    return fRetVal;
+}
+
+eAppendType fileOperatinos::foFindGroup(QString *qstrGroup)
+{
+    eAppendType eAppend= LAST_ITEM;
+    if( 0 != qstrGroup )
+    {
+        int indexOfGroupElement = -1;
+        QRegularExpression regex("\\s{2,}");//match at least 2 white spaces
+        QStringList qstrLineAsList = this->s_LineToAnalyse.qstrCurrentLine.split(regex, QString::SkipEmptyParts);
+
+        QRegularExpression regexpFindGroup("([a-zA-Z]{1,2}[0-9]{1,2})", QRegularExpression::CaseInsensitiveOption); //".*\\d+."  //("(/w+/d)|(/d)|(/w{1})");
+        indexOfGroupElement = qstrLineAsList.lastIndexOf(regexpFindGroup);
+
+        if( indexOfGroupElement >= 0  )
+        {
+            if(indexOfGroupElement < qstrLineAsList.size())
+            {
+                *qstrGroup = qstrLineAsList.at(indexOfGroupElement);
+                eAppend = GROUP;
+            }
+            else
+            {
+                qDebug() << "foFindGroup ERROR out of scope";
+                eAppend = NOTHING;
+            }
+        }
+        eAppend = NOTHING;
+    }
+    return eAppend;
 }
 
 bool fileOperatinos::foRemoveUnecessarySigns(QString *qstrlLineToAnalyze)
@@ -206,7 +300,7 @@ bool fileOperatinos::foAppendLineToList(QStringList *qstrlPreviousLineList, QStr
     return fRetVal;
 }
 
- bool fileOperatinos::foShouldAnalyseBuffer(QString *qstrAnalyse, eSaveData *enumSaveData)
+ bool fileOperatinos::foShouldAnalyseLine(QString *qstrAnalyse, eSaveData *enumSaveData)//InterestingData?
 {
     bool fRetVal = false;
     if( (0 != qstrAnalyse) && (0 != enumSaveData))
@@ -216,19 +310,19 @@ bool fileOperatinos::foAppendLineToList(QStringList *qstrlPreviousLineList, QStr
 
         if(qstrAnalyse->isEmpty())//Dont analyse if empty line
         {
-            *enumSaveData = DONT_SAVE;
+            *enumSaveData = DONT_ANALYSE;
             return fRetVal;
         }
         if( foIsWeekDay(*qstrAnalyse) )//Analyse interesiting data
         {
-            *enumSaveData = SAVE;
-            enumSaveDataLastState = *enumSaveData;
+            *enumSaveData = ANALYSE;
+            enumSaveDataLastState = *enumSaveData;//set to continue in Continue last mode
             return fRetVal;
         }
         else if(qstrAnalyse->contains("UWAGI", Qt::CaseInsensitive))//Finish analysing interesting data
         {
-            *enumSaveData = DONT_SAVE;
-            enumSaveDataLastState = *enumSaveData;
+            *enumSaveData = DONT_ANALYSE;
+            enumSaveDataLastState = *enumSaveData; //set to continue in Continue last mode
             return fRetVal;
         }
         else//Continue last mode
@@ -250,3 +344,19 @@ bool fileOperatinos::foAppendLineToList(QStringList *qstrlPreviousLineList, QStr
     }
     return fRetVal;
  }
+
+bool fileOperatinos::foStoreToMainBuffer(QString *qstrMainBuffer)
+{
+    bool fRetVal = false;
+    if( (0 != qstrMainBuffer) )
+    {
+        *qstrMainBuffer += (this->s_LineToAnalyse.qstrSaveBuffer + "\r\n");
+        fRetVal = true;
+    }
+    return fRetVal;
+}
+
+void fileOperatinos::foCleanAnalyseData()
+{
+    memset(&this->s_LineToAnalyse, 0, sizeof(sLineAnalyse));
+}

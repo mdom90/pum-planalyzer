@@ -36,9 +36,19 @@ private:
     QString strPdfConverterPath; // main + pdfconvert/pdftotext.exe
 
     //Data type
-    enum eSaveData {DONT_SAVE = 0, SAVE = 1, LAST_VALUE = 2, LAST_ITEM = 3};
+    enum eAnalyse {DONT_ANALYSE = 0, ANALYSE = 1, PREVIOUS_STATE = 2, LAST_ITEM = 3};
+    enum eAppendType { NOTHING = 0, GROUP = 1, SUBJECT = 2, BOTH = 3, LAST_ITEM = 3};
 
-    //QStringList qslBaseFileInMemory;
+    //Variables for line analysis
+    struct sLineAnalyse
+    {
+        quint8 qu8StoreCounter; // count from 0 to 2. 1 - line in lastLine, 2 - storeAction
+        QString qstrCurrentLine;
+        QString qstrLastLine;
+        QString qstrSaveBuffer;
+    } s_LineToAnalyse;
+
+
 
     //Convert pdf file from path to txt file
     bool foConvertPdf(QString strPdfFilePath);
@@ -48,11 +58,17 @@ private:
     //only interesting data
     bool foRemoveUnecessarySigns(QString *pqstrlAnalyzeLine);
     //Analyze text file, help to convert data to csv
-    bool foGeneralAnalyzeLine(QString* qstrLineToAnalyze, QString *qstrMainBuffor);
+    bool foAnalyzeLine(QString *qstrMainBuffer);
+    bool foAnalyzeShortLine(QString *qstrMainBuffer);
+    bool foAnalyzeNomrlaLine(QString *qstrMainBuffer);
+    void foCleanAnalyseData();
+    eAppendType foFindGroup(QString *qstrGroup);
+    eAppendType foFindSubject(QString *qstrSubject);
     //Append not full line to main line
     bool foAppendLineToList(QStringList *qstrlPreviousLineList, QStringList *qstrlListToAppend);
     //Analayze string, return if Save should start(true) or fiinish(false) base on string
-    bool foShouldAnalyseBuffer(QString *qstrAnalyseLine, eSaveData *result);
+    bool foShouldAnalyseLine(eAnalyse *pShouldAnalyse);
+    bool foStoreToMainBuffer(QString *qstrMainBuffer);
 
     bool foIsWeekDay(QString qstrAnalyseLine);
     //Prapare orderFile.txt for writing. Delete if it was created before
