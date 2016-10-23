@@ -7,7 +7,7 @@
 #include <QProcess>
 #include <QObject>
 #include <QTextStream>
-
+enum eAppendType { NOTHING = 0, GROUP = 1, SUBJECT = 2, BOTH = 3, LAST_IT = 3};
 
 class fileOperatinos
 {
@@ -18,12 +18,9 @@ public:
         static fileOperatinos singleton;
         return singleton;
     }
-
     QString strPdfFilePath;
 
     bool foPrepareFiles(QString strPdfFilePath);
-
-
 private:
     //Avoid copy of singleton
     fileOperatinos(fileOperatinos &);      // Don't Implement
@@ -37,18 +34,12 @@ private:
 
     //Data type
     enum eAnalyse {DONT_ANALYSE = 0, ANALYSE = 1, PREVIOUS_STATE = 2, LAST_ITEM = 3};
-    enum eAppendType { NOTHING = 0, GROUP = 1, SUBJECT = 2, BOTH = 3, LAST_ITEM = 3};
 
     //Variables for line analysis
-    struct sLineAnalyse
-    {
-        quint8 qu8StoreCounter; // count from 0 to 2. 1 - line in lastLine, 2 - storeAction
-        QString qstrCurrentLine;
-        QString qstrLastLine;
-        QString qstrSaveBuffer;
-    } s_LineToAnalyse;
-
-
+    quint8 qu8StoreCounter; // count from 0 to 2. 1 - line in lastLine, 2 - storeAction
+    QString qstrCurrentLine;
+    QString qstrLastLine;
+    QString qstrSaveBuffer;
 
     //Convert pdf file from path to txt file
     bool foConvertPdf(QString strPdfFilePath);
@@ -60,12 +51,12 @@ private:
     //Analyze text file, help to convert data to csv
     bool foAnalyzeLine(QString *qstrMainBuffer);
     bool foAnalyzeShortLine(QString *qstrMainBuffer);
-    bool foAnalyzeNomrlaLine(QString *qstrMainBuffer);
+    bool foAnalyzeNormalLine(QString *qstrMainBuffer);
     void foCleanAnalyseData();
     eAppendType foFindGroup(QString *qstrGroup);
     eAppendType foFindSubject(QString *qstrSubject);
-    //Append not full line to main line
-    bool foAppendLineToList(QStringList *qstrlPreviousLineList, QStringList *qstrlListToAppend);
+    bool foAppendGroup(QString *pqstrGroup);
+    bool foAppendSubject(QString *pqstrSubject);
     //Analayze string, return if Save should start(true) or fiinish(false) base on string
     bool foShouldAnalyseLine(eAnalyse *pShouldAnalyse);
     bool foStoreToMainBuffer(QString *qstrMainBuffer);
