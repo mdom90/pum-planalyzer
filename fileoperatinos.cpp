@@ -4,7 +4,7 @@
 #include <QDebug>
 #include <QCoreApplication>
 
-#define MAX_LINE_IN_ANALYSIS 2
+#define NEW_LINE_OFFSET 2
 #define REGEXP_SPLIT_COLUMN "\\s{2,}" //match at least 2 white spaces
 
 inline eAppendType operator|(eAppendType a, eAppendType b)
@@ -93,7 +93,6 @@ bool fileOperatinos::foConvertTextFile(QString strTxtFilePath)
                }
                case ANALYSE:
                {
-                   qDebug() << "Line: " << this->qstrCurrentLine;
                    fRetVal = foAnalyzeLine(&qstrMainBuffer);
                    break;
                }
@@ -102,6 +101,17 @@ bool fileOperatinos::foConvertTextFile(QString strTxtFilePath)
                }
            }
        }
+       if( false == this->qstrLastLine.isEmpty() )
+       {//Store last part of normal buffer
+           this->qstrSaveBuffer = this->qstrLastLine;
+           foStoreToMainBuffer(&qstrMainBuffer);
+       }
+       QRegularExpression regexp_unnecesarysigns("\f|-");
+       qstrMainBuffer.replace(regexp_unnecesarysigns,"");
+       QRegularExpression regex(" {2,}");//match at least 2 white spaces
+       QStringList MainBufferList = qstrMainBuffer.split(regex, QString::SkipEmptyParts);
+       //qDebug() << "-----SAVE DATA-------" << qstrMainBuffer;
+       out << MainBufferList.join(";");
        outputFile.close();
        inputFile.close();
     }
@@ -138,9 +148,8 @@ bool fileOperatinos::foAnalyzeLine(QString *qstrMainBuffer)
     bool fRetVal = false;
     const quint8 u8MinimumNrOfColumns = 4;
     QString *qstrLineToAnalyse = &(this->qstrCurrentLine);
-    quint8 *qu8StoreCounter = &(this->qu8StoreCounter);
 
-    if( (0 != qstrMainBuffer) && (0 != qstrLineToAnalyse) && (0 != qu8StoreCounter))
+    if( (0 != qstrMainBuffer) && (0 != qstrLineToAnalyse) )
     {
        QRegularExpression regex(REGEXP_SPLIT_COLUMN);//match at least 2 white spaces
        QStringList qstrlCurrentLine = qstrLineToAnalyse->split(regex, QString::SkipEmptyParts);//split QString to have line elements in list elements
@@ -159,6 +168,7 @@ bool fileOperatinos::foAnalyzeLine(QString *qstrMainBuffer)
     return fRetVal;
 }
 
+//TODO remove qstrMainBuffer
 bool fileOperatinos::foAnalyzeNormalLine(QString *qstrMainBuffer)
 {
     bool fRetVal = false;
@@ -166,18 +176,7 @@ bool fileOperatinos::foAnalyzeNormalLine(QString *qstrMainBuffer)
     if( 0 != qstrMainBuffer )
     {
         fRetVal = true;
-        this->qu8StoreCounter++;
-        qDebug() << "CounterN: " << qu8StoreCounter;
-        if( this->qu8StoreCounter >= MAX_LINE_IN_ANALYSIS )
-        {
-            this->qstrSaveBuffer = this->qstrLastLine + this->qstrCurrentLine;
-            fRetVal = foStoreToMainBuffer(qstrMainBuffer);
-            foCleanAnalyseData();
-        }
-        else
-        {
-            this->qstrLastLine = this->qstrCurrentLine;
-        }
+        this->qstrLastLine += this->qstrCurrentLine + "\r\n";
     }
     return fRetVal;
 }
@@ -192,27 +191,17 @@ bool fileOperatinos::foAnalyzeShortLine(QString *qstrMainBuffer)
         if(foIsWeekDay(this->qstrCurrentLine))
         {
             qDebug() << "Week day";
-            this->qstrCurrentLine = "\r\n" + this->qstrCurrentLine + "\r\n";
-            this->qu8StoreCounter++;
-            if( this->qu8StoreCounter >= MAX_LINE_IN_ANALYSIS )
-            {
-                this->qstrSaveBuffer = this->qstrLastLine + this->qstrCurrentLine;
-                fRetVal = foStoreToMainBuffer(qstrMainBuffer);
-                foCleanAnalyseData();
-            }
+            this->qstrCurrentLine = this->qstrCurrentLine + "\r\n";
+            this->qstrLastLine += this->qstrCurrentLine;
         }
-        else if( this->qu8StoreCounter > 0 )
+        else
         {//Special line to analyse
-            qDebug() << "Short line case";
             eAppendType appendType = LAST_IT;
-            eAppendType appendTypeSub = LAST_IT;
             QString qstrGroup = "";
-            QString qstrSubject = "";
 
             appendType = foFindGroup(&qstrGroup);
-            appendTypeSub = foFindSubject(&qstrSubject);
-            appendType = appendType|appendTypeSub;
-
+            //appendTypeSub = foFindSubject(&qstrSubject);
+            //appendType = appendType|appendTypeSub;
             switch(appendType)
             {
                 case GROUP:
@@ -221,7 +210,7 @@ bool fileOperatinos::foAnalyzeShortLine(QString *qstrMainBuffer)
                     foStoreToMainBuffer(qstrMainBuffer);
                     break;
                 }
-                case SUBJECT:
+           /*     case SUBJECT:
                 {
                     foAppendSubject(&qstrSubject);
                     foStoreToMainBuffer(qstrMainBuffer);
@@ -229,20 +218,18 @@ bool fileOperatinos::foAnalyzeShortLine(QString *qstrMainBuffer)
                 }
                 case BOTH:
                 {
+                    foAppendGroup(&qstrGroup);
+                    foAppendSubject(&qstrSubject);
+                    foStoreToMainBuffer(qstrMainBuffer);
                     break;
                 }
+           */
                 case  NOTHING:
                 default:
                 {//Some shit in line
-                    foCleanAnalyseData();
+                    //foCleanAnalyseData();
                 }
             }
-        }
-        else
-        {//This should never happened. To do this scenario should be: shortLine_not_weekDay, normalLine
-            //Nothing to do in here
-            qDebug() << "Oops...";
-            qDebug() << "CounterS: " << qu8StoreCounter;
         }
     }
     return fRetVal;
@@ -260,22 +247,16 @@ eAppendType fileOperatinos::foFindGroup(QString *qstrGroup)
         QRegularExpression regexpFindGroup("([a-zA-Z]{1,2}[0-9]{1,2})", QRegularExpression::CaseInsensitiveOption); //".*\\d+."  //("(/w+/d)|(/d)|(/w{1})");
         indexOfGroupElement = qstrLineAsList.lastIndexOf(regexpFindGroup);
 
-        if( indexOfGroupElement >= 0  )
+        if( (indexOfGroupElement >= 0) && (indexOfGroupElement < qstrLineAsList.size()) )
         {
-            if(indexOfGroupElement < qstrLineAsList.size())
-            {
-                *qstrGroup = qstrLineAsList.at(indexOfGroupElement);
+                *qstrGroup = " "+qstrLineAsList.at(indexOfGroupElement);
                 eAppend = GROUP;
-                qDebug() << "List line to find group: " << qstrLineAsList;
                 qDebug() << "Found group: "  <<  *qstrGroup;
-            }
-            else
-            {
-                qDebug() << "foFindGroup ERROR out of scope";
-                eAppend = NOTHING;
-            }
         }
-        eAppend = NOTHING;
+        else
+        {
+            eAppend = NOTHING;
+        }
     }
     return eAppend;
 }
@@ -294,6 +275,7 @@ eAppendType fileOperatinos::foFindSubject(QString *qstrSubject)
         if( (indexOfSubjectElement >= 0) && (indexOfSubjectElement < qstrCurrentLineList.size()) )
         {
             *qstrSubject = qstrCurrentLineList.at(indexOfSubjectElement);
+            qDebug() << "List line to find subject: " << qstrCurrentLineList;
             qDebug() << "Found subject: "  <<  *qstrSubject;
             eAppend = SUBJECT;
         }
@@ -309,10 +291,12 @@ bool fileOperatinos::foAppendGroup(QString *pqstrGroup)
 {
     bool fRetVal = false;
     if( 0 != pqstrGroup )
-    {//Group is last element in string, so append to last element
+    {//Group is last element in string, so append to last element - \r\n signs
         fRetVal = true;
-        this->qstrLastLine.append(pqstrGroup);
+        int uStrSize = this->qstrLastLine.size();
+        this->qstrLastLine.insert(uStrSize - NEW_LINE_OFFSET, *pqstrGroup);//insert before \r\n
         this->qstrSaveBuffer = this->qstrLastLine;
+        //qDebug() << "Modify line with group:" << qstrLastLine;
     }
     return fRetVal;
 }
@@ -320,15 +304,20 @@ bool fileOperatinos::foAppendGroup(QString *pqstrGroup)
 bool fileOperatinos::foAppendSubject(QString *pqstrSubject)
 {
     bool fRetVal = false;
-    QRegularExpression regexp_splitCol(REGEXP_SPLIT_COLUMN, QRegularExpression::CaseInsensitiveOption);
+/*    QRegularExpression regexp_splitCol(REGEXP_SPLIT_COLUMN, QRegularExpression::CaseInsensitiveOption);
     QString *pqstrLastLine = &(this->qstrLastLine);
 
     if( 0 != pqstrSubject )
     {
         QStringList qstrlLastLine = pqstrLastLine->split(regexp_splitCol);
         qDebug() << "Subject add in here: " << qstrlLastLine.at(3);
+        QString qstrSubject = qstrlLastLine.at(3);
+        qstrSubject = qstrSubject + *pqstrSubject; // marged subject
+        qstrlLastLine.replace(3, qstrSubject);
+        *pqstrLastLine =
+        this->qstrSaveBuffer = qstrLastLine;
     }
-
+*/
 
     return fRetVal;
 }
@@ -394,7 +383,9 @@ bool fileOperatinos::foStoreToMainBuffer(QString *qstrMainBuffer)
     bool fRetVal = false;
     if( (0 != qstrMainBuffer) )
     {
-        *qstrMainBuffer += (this->qstrSaveBuffer + "\r\n");
+        //qDebug() << "Storing: " << qstrSaveBuffer;
+        *qstrMainBuffer += (this->qstrSaveBuffer);
+        foCleanAnalyseData();
         fRetVal = true;
     }
     return fRetVal;
