@@ -31,6 +31,22 @@ bool fileOperatinos::foPrepareFiles(QString strPdfFilePath)
     return fRetVal;
 }
 
+bool fileOperatinos::foLoadOrderDataFile(QString *orderOneLine)
+{
+    bool fRetVal = false;
+    QFile inputFile(this->strConvTxtFilePath);
+    fRetVal = inputFile.open(QIODevice::ReadOnly);
+
+    if( (true == fRetVal) && (0 != orderOneLine) )
+    {
+        QTextStream in(&inputFile);
+        in.setCodec("UTF-8");
+        *orderOneLine = in.readAll();
+    }
+
+    return fRetVal;
+}
+
 bool fileOperatinos::foConvertPdf(QString strPdfFilePath)
 {
     bool fRetVal = false;
@@ -153,15 +169,15 @@ bool fileOperatinos::foAnalyzeLine(QString *qstrMainBuffer)
     {
        QRegularExpression regex(REGEXP_SPLIT_COLUMN);//match at least 2 white spaces
        QStringList qstrlCurrentLine = qstrLineToAnalyse->split(regex, QString::SkipEmptyParts);//split QString to have line elements in list elements
-       qDebug() << "Analyze line list: " << qstrlCurrentLine;
+       //qDebug() << "Analyze line list: " << qstrlCurrentLine;
        if(qstrlCurrentLine.count() > u8MinimumNrOfColumns)
        {//Nomral line
-            qDebug() << "Normal line";
+            //qDebug() << "Normal line";
             fRetVal = foAnalyzeNormalLine(qstrMainBuffer);
        }
        else
        {//Short line
-            qDebug() << "Short line";
+            //qDebug() << "Short line";
             fRetVal = foAnalyzeShortLine(qstrMainBuffer);
        }
     }
@@ -190,7 +206,7 @@ bool fileOperatinos::foAnalyzeShortLine(QString *qstrMainBuffer)
         fRetVal = true;
         if(foIsWeekDay(this->qstrCurrentLine))
         {
-            qDebug() << "Week day";
+            //qDebug() << "Week day";
             this->qstrCurrentLine = this->qstrCurrentLine + "\r\n";
             this->qstrLastLine += this->qstrCurrentLine;
         }
@@ -251,7 +267,7 @@ eAppendType fileOperatinos::foFindGroup(QString *qstrGroup)
         {
                 *qstrGroup = " "+qstrLineAsList.at(indexOfGroupElement);
                 eAppend = GROUP;
-                qDebug() << "Found group: "  <<  *qstrGroup;
+                //qDebug() << "Found group: "  <<  *qstrGroup;
         }
         else
         {
@@ -275,8 +291,8 @@ eAppendType fileOperatinos::foFindSubject(QString *qstrSubject)
         if( (indexOfSubjectElement >= 0) && (indexOfSubjectElement < qstrCurrentLineList.size()) )
         {
             *qstrSubject = qstrCurrentLineList.at(indexOfSubjectElement);
-            qDebug() << "List line to find subject: " << qstrCurrentLineList;
-            qDebug() << "Found subject: "  <<  *qstrSubject;
+            //qDebug() << "List line to find subject: " << qstrCurrentLineList;
+            //qDebug() << "Found subject: "  <<  *qstrSubject;
             eAppend = SUBJECT;
         }
         else

@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include "fileoperatinos.h"
+#include "datastructure.h"
+#include <QDesktopWidget>
 
 namespace Ui {
 class MainWindow;
@@ -24,6 +26,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     fileOperatinos *foInstance;
+    dataStructure dataInstance;
 
     void updatePlanList();
     void uiConfigTable();

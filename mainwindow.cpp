@@ -13,12 +13,12 @@
 #include <QTableWidget>
 #include <QHeaderView>//to streach headers in table
 
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    resize(QDesktopWidget().availableGeometry(this).size() * 0.7);
     uiConfigTable();
     foInstance = &fileOperatinos::foGetInstance();
 }
@@ -56,6 +56,9 @@ void MainWindow::on_btnShowFilteredPlan_clicked()
     //Instance of fileOperaion
     bool fResult = false;
     fResult = foInstance->foPrepareFiles(this->pdfFilePath);
+    dataInstance.prepareTableData();
+    dataInstance.testShowData();
+    dataInstance.setTableData(ui->tableWidget);
 }
 
 void MainWindow::updatePlanList()
@@ -68,6 +71,8 @@ void MainWindow::uiConfigTable()
     QTableWidget *qtablew = ui->tableWidget;
 
     qtablew->setColumnCount(tableCol);
-    qtablew->setHorizontalHeaderLabels(tableHeaders);
+    //qtablew->setHorizontalHeaderLabels(tableHeaders);
     qtablew->horizontalHeader()->setStretchLastSection(true);//fit header to table size
+    qtablew->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    qtablew->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }

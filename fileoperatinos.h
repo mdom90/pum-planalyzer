@@ -21,6 +21,7 @@ public:
     QString strPdfFilePath;
 
     bool foPrepareFiles(QString strPdfFilePath);
+    bool foLoadOrderDataFile(QString *strOrderData);
 private:
     //Avoid copy of singleton
     fileOperatinos(fileOperatinos &);      // Don't Implement
@@ -60,7 +61,6 @@ private:
     //Analayze string, return if Save should start(true) or fiinish(false) base on string
     bool foShouldAnalyseLine(eAnalyse *pShouldAnalyse);
     bool foStoreToMainBuffer(QString *qstrMainBuffer);
-
     bool foIsWeekDay(QString qstrAnalyseLine);
     //Prapare orderFile.txt for writing. Delete if it was created before
     // and create new empty one
