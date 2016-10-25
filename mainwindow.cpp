@@ -3,12 +3,8 @@
 #include <QFileDialog>
 #include <QStringList>
 #include <QString>
-//
-#include <QDebug>
 
-#include <windef.h>
-#include <winnt.h>
-#include <winbase.h>
+#include <QDebug>
 
 #include <QTableWidget>
 #include <QHeaderView>//to streach headers in table
@@ -26,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-    foInstance = 0;
+    //foInstance = 0;
 }
 
 void MainWindow::on_btnLoadFile_pressed()
@@ -45,8 +41,8 @@ void MainWindow::on_btnLoadFile_pressed()
         filePath = selectedFile.join("");
         if( !filePath.isEmpty() )
         {
-           ui->LoadedFileTextBrowser->setPlainText(filePath);
-           pdfFilePath = filePath;
+            ui->LoadedFileTextBrowser->setPlainText(filePath);
+            pdfFilePath = filePath;
         }
     }
 }
@@ -54,11 +50,19 @@ void MainWindow::on_btnLoadFile_pressed()
 void MainWindow::on_btnShowFilteredPlan_clicked()
 {
     //Instance of fileOperaion
-    bool fResult = false;
-    fResult = foInstance->foPrepareFiles(this->pdfFilePath);
+    //bool fResult = false;
+    foInstance->foPrepareFiles(this->pdfFilePath);
     dataInstance.prepareTableData();
     dataInstance.testShowData();
-    dataInstance.setTableData(ui->tableWidget);
+    if( 0 != ui->tableWidget )
+    {
+        dataInstance.setTableData(ui->tableWidget);
+    }
+    else
+    {
+        qWarning() << "on_btnShowFilteredPlan_clicked() null pointer";
+    }
+
 }
 
 void MainWindow::updatePlanList()
@@ -69,10 +73,16 @@ void MainWindow::updatePlanList()
 void MainWindow::uiConfigTable()
 {
     QTableWidget *qtablew = ui->tableWidget;
-
-    qtablew->setColumnCount(tableCol);
-    //qtablew->setHorizontalHeaderLabels(tableHeaders);
-    qtablew->horizontalHeader()->setStretchLastSection(true);//fit header to table size
-    qtablew->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    qtablew->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    if( 0 != qtablew )
+    {
+        qtablew->setColumnCount(tableCol);
+        //qtablew->setHorizontalHeaderLabels(tableHeaders);
+        qtablew->horizontalHeader()->setStretchLastSection(true);//fit header to table size
+        qtablew->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        qtablew->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    }
+    else
+    {
+        qWarning() << "uiConfigTable() null pointer";
+    }
 }

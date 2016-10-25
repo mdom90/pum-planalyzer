@@ -6,7 +6,8 @@
 #include "datastructure.h"
 #include <QDesktopWidget>
 
-namespace Ui {
+namespace Ui
+{
 class MainWindow;
 }
 
@@ -20,7 +21,6 @@ public:
 
 private slots:
     void on_btnLoadFile_pressed();
-
     void on_btnShowFilteredPlan_clicked();
 
 private:
@@ -28,13 +28,13 @@ private:
     fileOperatinos *foInstance;
     dataStructure dataInstance;
 
-    void updatePlanList();
-    void uiConfigTable();
-
     const qint8 tableCol = 5;
     const QStringList tableHeaders = {"Od", "Do", "Przemdiot", "Rodzaj", "Grupa // Gdzie"};
     QString filePath;
     QString pdfFilePath;
+
+    void updatePlanList();
+    void uiConfigTable();
 };
 
 #endif // MAINWINDOW_H

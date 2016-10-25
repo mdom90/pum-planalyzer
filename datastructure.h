@@ -9,12 +9,13 @@ class dataStructure
 public:
     dataStructure();
 
-    void setTableData(QTableWidget *TableWidgetToFill);
+    bool setTableData(QTableWidget *TableWidgetToFill);
     bool prepareTableData();
     void testShowData();
 
 private:
-    fileOperatinos *foInstance;
+    enum eWeekDays {MON = 0, TUE, WED, THU, FRI, SAT, SUN, WEEKDAY_LASTITEM};
+    enum eStructElements { START_TIME=0, FINISH_TIME, SUBJECT_NAME, SUBJECT_TYPE, GROUPS, DATA_LAST_ITEM };
     struct sLineElements
     {
         QString weekDay;
@@ -24,10 +25,12 @@ private:
         QString subjectType;
         QString groups;
     };
+
+    fileOperatinos *foInstance;
     QList <sLineElements> list_sLineElements;
     QStringList qstrl_avaliableGroups;
-
-    enum eStructElements { START_TIME=0, FINISH_TIME, SUBJECT_NAME, SUBJECT_TYPE, GROUPS, DATA_LAST_ITEM };
+    QString tab_strWeekDays[WEEKDAY_LASTITEM] = {"poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota", "niedziela"};
+    QList <sLineElements> tab_listOfStructLineElements[DATA_LAST_ITEM];
 
     bool fillStruct(sLineElements *structToFill, QStringList *listOneLine);
     bool findAvaliableGroups();

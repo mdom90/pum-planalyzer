@@ -13,6 +13,7 @@ class fileOperatinos
 {
 public:
     fileOperatinos();
+    //Singleton
     static fileOperatinos& foGetInstance()
     {
         static fileOperatinos singleton;
@@ -22,6 +23,7 @@ public:
 
     bool foPrepareFiles(QString strPdfFilePath);
     bool foLoadOrderDataFile(QString *strOrderData);
+
 private:
     //Avoid copy of singleton
     fileOperatinos(fileOperatinos &);      // Don't Implement
@@ -37,32 +39,32 @@ private:
     enum eAnalyse {DONT_ANALYSE = 0, ANALYSE = 1, PREVIOUS_STATE = 2, LAST_ITEM = 3};
 
     //Variables for line analysis
-    quint8 qu8StoreCounter; // count from 0 to 2. 1 - line in lastLine, 2 - storeAction
     QString qstrCurrentLine;
-    QString qstrLastLine;
     QString qstrSaveBuffer;
 
     //Convert pdf file from path to txt file
     bool foConvertPdf(QString strPdfFilePath);
-    //Convert txt file to programmer friendly txt file
+    //Convert txt file to csv txt file
     bool foConvertTextFile(QString strTxtFilePath);
+    bool foProcessFileAnalysis(QTextStream *qtsInput);
+
     //Analyze qStringList line, and modify it to give back
     //only interesting data
     bool foRemoveUnecessarySigns(QString *pqstrlAnalyzeLine);
     //Analyze text file, help to convert data to csv
-    bool foAnalyzeLine(QString *qstrMainBuffer);
-    bool foAnalyzeShortLine(QString *qstrMainBuffer);
-    bool foAnalyzeNormalLine(QString *qstrMainBuffer);
+    bool foAnalyzeLine();
+    bool foAnalyzeShortLine();
+    bool foAnalyzeNormalLine();
     void foCleanAnalyseData();
     eAppendType foFindGroup(QString *qstrGroup);
     eAppendType foFindSubject(QString *qstrSubject);
     bool foAppendGroup(QString *pqstrGroup);
     bool foAppendSubject(QString *pqstrSubject);
-    //Analayze string, return if Save should start(true) or fiinish(false) base on string
+    //Check if line should be analysed
     bool foShouldAnalyseLine(eAnalyse *pShouldAnalyse);
     bool foStoreToMainBuffer(QString *qstrMainBuffer);
     bool foIsWeekDay(QString qstrAnalyseLine);
-    //Prapare orderFile.txt for writing. Delete if it was created before
+    //Prapare file for writing. Delete if file was created before
     // and create new empty one
     bool foPrepareWriteFile(QFile *qFileToCheck);
 
