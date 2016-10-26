@@ -26,7 +26,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     fileOperatinos *foInstance;
-    dataStructure dataInstance;
+    dataStructure *dataInstance;
 
     const qint8 tableCol = 5;
     const QStringList tableHeaders = {"Od", "Do", "Przemdiot", "Rodzaj", "Grupa // Gdzie"};

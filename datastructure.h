@@ -9,16 +9,25 @@ class dataStructure
 public:
     dataStructure();
 
+    static dataStructure& dsGetInstance()
+    {
+        static dataStructure singleton;
+        return singleton;
+    }
+
     bool setTableData(QTableWidget *TableWidgetToFill);
     bool prepareTableData();
     void testShowData();
 
 private:
+    //Avoid copy of singleton
+    dataStructure(fileOperatinos &);      // Don't Implement
+    void operator=(fileOperatinos const&); // Don't implement
+
     enum eWeekDays {MON = 0, TUE, WED, THU, FRI, SAT, SUN, WEEKDAY_LASTITEM};
     enum eStructElements { START_TIME=0, FINISH_TIME, SUBJECT_NAME, SUBJECT_TYPE, GROUPS, DATA_LAST_ITEM };
-    struct sLineElements
+    struct sPlanElements
     {
-        QString weekDay;
         QString startTime;
         QString finishTime;
         QString subjectName;
@@ -27,12 +36,13 @@ private:
     };
 
     fileOperatinos *foInstance;
-    QList <sLineElements> list_sLineElements;
     QStringList qstrl_avaliableGroups;
-    QString tab_strWeekDays[WEEKDAY_LASTITEM] = {"poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota", "niedziela"};
-    QList <sLineElements> tab_listOfStructLineElements[DATA_LAST_ITEM];
+    const QString tab_strWeekDays[WEEKDAY_LASTITEM] = {"poniedzialek", "wtorek", "sroda", "czwartek", "piatek", "sobota", "niedziela"};
+    QList <sPlanElements> tab_listOfStructLineElements[WEEKDAY_LASTITEM];
 
-    bool fillStruct(sLineElements *structToFill, QStringList *listOneLine);
+    bool populateWeek(QStringList *listWeekDayOneLineData);
+    eWeekDays whichDay(QStringList *listToAnalyse);
+    bool populatWeekDayWithData(eWeekDays currentDay, QStringList *listWeekDayOneLineData);
     bool findAvaliableGroups();
 };
 

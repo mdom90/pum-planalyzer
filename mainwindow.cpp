@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     resize(QDesktopWidget().availableGeometry(this).size() * 0.7);
     uiConfigTable();
     foInstance = &fileOperatinos::foGetInstance();
+    dataInstance = &dataStructure::dsGetInstance();
 }
 
 MainWindow::~MainWindow()
@@ -52,11 +53,11 @@ void MainWindow::on_btnShowFilteredPlan_clicked()
     //Instance of fileOperaion
     //bool fResult = false;
     foInstance->foPrepareFiles(this->pdfFilePath);
-    dataInstance.prepareTableData();
-    dataInstance.testShowData();
+    dataInstance->prepareTableData();
+    dataInstance->testShowData();
     if( 0 != ui->tableWidget )
     {
-        dataInstance.setTableData(ui->tableWidget);
+        dataInstance->setTableData(ui->tableWidget);
     }
     else
     {
