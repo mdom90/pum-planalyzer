@@ -4,6 +4,7 @@
 #include <QStringList>
 #include <QString>
 #include <QCheckBox>
+#include <QListWidgetItem>
 
 #include <QDebug>
 
@@ -20,6 +21,12 @@ MainWindow::MainWindow(QWidget *parent) :
     foInstance = &fileOperatinos::foGetInstance();
     dataInstance = &dataStructure::dsGetInstance();
     initDayFilter();
+    listWidget = new QListWidget(this);
+    listWidget->setVisible(false);
+    connect(listWidget, SIGNAL(itemChanged(QListWidgetItem *)), this, SLOT(on_GroupCheckBox_itemChanged(QListWidgetItem *)));
+    CleanGroupCheckBtn = new QPushButton("&Clear selection", this);
+    CleanGroupCheckBtn->setVisible(false);
+    connect(CleanGroupCheckBtn, SIGNAL(clicked(bool)), this, SLOT(on_CleanGroupCheckBtn_onClick(bool)));
     //configGroupFilter();
 }
 
@@ -59,6 +66,8 @@ void MainWindow::on_btnShowFilteredPlan_clicked()
     foInstance->foPrepareFiles(this->pdfFilePath);
     dataInstance->prepareTableData();
     dataInstance->findAvaliableGroups();
+    ui->horizontalLayout->addWidget(createCheckboxGroupsView());
+
     dataInstance->testShowData();
     ui->WeekDayBox->setEnabled(true);
     if( 0 != ui->tableWidget )
@@ -75,6 +84,7 @@ void MainWindow::on_btnShowFilteredPlan_clicked()
 
 void MainWindow::updatePlanList()
 {
+    loadDataForDay(ui->WeekDayBox->currentIndex());
 }
 
 void MainWindow::uiConfigTable()
@@ -115,21 +125,66 @@ void MainWindow::cleanTableData()
     ui->tableWidget->setRowCount(0);
 }
 
-void MainWindow::on_GroupFilter_lineEdit_selectionChanged()
+QGroupBox *MainWindow::createCheckboxGroupsView()
 {
-    ui->GroupFilter_lineEdit->clear();
+    QGroupBox *groupBox = new QGroupBox(tr("Avaliable groups checkboxes"));
+    groupBox->setFlat(true);
+
+    QStringList groupLabels = dataInstance->getGroupsNamesList();
+    QStringListIterator it(groupLabels);
+    QVBoxLayout *vbox = new QVBoxLayout;
+    while( it.hasNext() )
+    {
+        QListWidgetItem *listItem = new QListWidgetItem(it.next(),this->listWidget);
+        listItem->setCheckState(Qt::Unchecked);
+        listWidget->addItem(listItem);
+    }
+    vbox->addWidget(listWidget);
+    vbox->addWidget(CleanGroupCheckBtn);
+    vbox->addStretch(1);
+    groupBox->setLayout(vbox);
+    listWidget->setVisible(true);
+    CleanGroupCheckBtn->setVisible(true);
+
+    return groupBox;
 }
 
-void MainWindow::configGroupFilter()
+void MainWindow::on_GroupCheckBox_itemChanged(QListWidgetItem *item)
 {
-    QRegExp rx("([a-z0-9]{1,4}\|?)");
-    QValidator *validator = new QRegExpValidator(rx, this);
-    ui->GroupFilter_lineEdit->setValidator(validator);
-
+    if(0 != item)
+    {
+        switch(item->checkState())
+        {
+        case Qt::Checked:
+        {
+            groupFilter.append(item->text());
+            groupFilter.removeDuplicates();
+            break;
+        }
+        case Qt::Unchecked:
+        {
+            groupFilter.removeOne(item->text());
+            break;
+        }
+        default:
+        {
+            qDebug() << "on_GroupCheckBox default";
+        }
+        }
+        updatePlanList();
+    }
+    else
+    {
+        qDebug() << "on_GroupCheckBox";
+    }
 }
 
-void MainWindow::on_GroupFilter_lineEdit_editingFinished()
+void MainWindow::on_CleanGroupCheckBtn_onClick(bool fClicked)
 {
-    this->groupFilter = ui->GroupFilter_lineEdit->displayText();
-    this->loadDataForDay(ui->WeekDayBox->currentIndex());
+    for(int iIter = 0; iIter < listWidget->count(); iIter++)
+    {
+        QListWidgetItem* item = listWidget->item(iIter);
+        item->setCheckState(Qt::Unchecked);
+    }
+    qDebug() << "btn click execute";
 }

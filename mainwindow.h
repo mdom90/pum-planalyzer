@@ -5,6 +5,9 @@
 #include "fileoperatinos.h"
 #include "datastructure.h"
 #include <QDesktopWidget>
+#include <QGroupBox>
+#include <QListWidgetItem>
+#include <QPushButton>
 
 namespace Ui
 {
@@ -24,28 +27,30 @@ private slots:
     void on_btnShowFilteredPlan_clicked();
 
     void on_WeekDayBox_currentIndexChanged(int index);
-
-    void on_GroupFilter_lineEdit_selectionChanged();
-
-    void on_GroupFilter_lineEdit_editingFinished();
+    void on_GroupCheckBox_itemChanged(QListWidgetItem * item);
+    void on_CleanGroupCheckBtn_onClick(bool fClicked);
 
 private:
     Ui::MainWindow *ui;
     fileOperatinos *foInstance;
     dataStructure *dataInstance;
+    QListWidget *listWidget;
+    QList<QListWidgetItem *> qlstSelectedGroups;
+    QPushButton *CleanGroupCheckBtn;
 
     const qint8 tableCol = 5;
     const QStringList tableHeaders = {"Od", "Do", "Przemdiot", "Rodzaj", "Grupa // Gdzie"};
     QString filePath;
     QString pdfFilePath;
-    QString groupFilter;
+    QStringList groupFilter;
 
     void updatePlanList();
     void uiConfigTable();
     void initDayFilter();
-    void configGroupFilter();
     void loadDataForDay(int iDayIndex);
     void cleanTableData();
+
+    QGroupBox *createCheckboxGroupsView();
 };
 
 #endif // MAINWINDOW_H

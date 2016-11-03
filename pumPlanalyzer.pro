@@ -22,3 +22,5 @@ HEADERS  += mainwindow.h \
     datastructure.h
 
 FORMS    += mainwindow.ui
+
+CONFIG+= static

@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>pumPlanalyser</string>
+   <string>pumPlanalyzer</string>
   </property>
   <property name="accessibleName">
    <string>instanceMainWindow</string>
@@ -138,28 +138,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="GroupFilter_lineEdit">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>200</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Groups separated by | (i.e S1|A,kl1 )</string>
-         </property>
-         <property name="clearButtonEnabled">
-          <bool>false</bool>
-         </property>
-        </widget>
        </item>
       </layout>
      </widget>

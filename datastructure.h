@@ -15,10 +15,12 @@ public:
         return singleton;
     }
 
-    bool setTableData(QTableWidget *TableWidgetToFill, int iDayIndex, QString qstrValidateFilter);
+    bool setTableData(QTableWidget *TableWidgetToFill, int iDayIndex, QStringList qstrValidateFilter);
     bool prepareTableData();
     bool findAvaliableGroups();
     QStringList getListWeekDays();
+    int getGroupsSize();
+    QStringList getGroupsNamesList();
 
     void testShowData();
 
@@ -34,7 +36,7 @@ private:
         QString finishTime;
         QString subjectName;
         QString subjectType;
-        QString groups;
+        QStringList groups;
         QString additionalInfo;
     };
 
@@ -47,6 +49,7 @@ private:
     eWeekDays whichDay(QStringList *listToAnalyse);
     bool populatWeekDayWithData(eWeekDays currentDay, QStringList *listWeekDayOneLineData);
     void CleanPlanDataList();
+    bool shouldDisplaySubject(QStringList pqstrlGroupList, QStringList pqstrlFilters);
 
 };
 
