@@ -3,6 +3,7 @@
 #include <QFileDialog>
 #include <QStringList>
 #include <QString>
+#include <QCheckBox>
 
 #include <QDebug>
 
@@ -18,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
     uiConfigTable();
     foInstance = &fileOperatinos::foGetInstance();
     dataInstance = &dataStructure::dsGetInstance();
+    initDayFilter();
+    //configGroupFilter();
 }
 
 MainWindow::~MainWindow()
@@ -52,23 +55,26 @@ void MainWindow::on_btnShowFilteredPlan_clicked()
 {
     //Instance of fileOperaion
     //bool fResult = false;
+    cleanTableData();
     foInstance->foPrepareFiles(this->pdfFilePath);
     dataInstance->prepareTableData();
+    dataInstance->findAvaliableGroups();
     dataInstance->testShowData();
+    ui->WeekDayBox->setEnabled(true);
     if( 0 != ui->tableWidget )
     {
-        dataInstance->setTableData(ui->tableWidget);
+        dataInstance->setTableData(ui->tableWidget, dataStructure::MON, this->groupFilter);
     }
     else
     {
         qWarning() << "on_btnShowFilteredPlan_clicked() null pointer";
     }
+    //ui->btnShowFilteredPlan->setEnabled(false);
 
 }
 
 void MainWindow::updatePlanList()
 {
-
 }
 
 void MainWindow::uiConfigTable()
@@ -86,4 +92,44 @@ void MainWindow::uiConfigTable()
     {
         qWarning() << "uiConfigTable() null pointer";
     }
+}
+
+void MainWindow::initDayFilter()
+{
+    ui->WeekDayBox->addItems(dataInstance->getListWeekDays());
+}
+
+void MainWindow::on_WeekDayBox_currentIndexChanged(int index)
+{
+    loadDataForDay(index);
+}
+
+void MainWindow::loadDataForDay(int iDayIndex)
+{
+    cleanTableData();
+    dataInstance->setTableData(ui->tableWidget, iDayIndex, this->groupFilter);
+}
+
+void MainWindow::cleanTableData()
+{
+    ui->tableWidget->setRowCount(0);
+}
+
+void MainWindow::on_GroupFilter_lineEdit_selectionChanged()
+{
+    ui->GroupFilter_lineEdit->clear();
+}
+
+void MainWindow::configGroupFilter()
+{
+    QRegExp rx("([a-z0-9]{1,4}\|?)");
+    QValidator *validator = new QRegExpValidator(rx, this);
+    ui->GroupFilter_lineEdit->setValidator(validator);
+
+}
+
+void MainWindow::on_GroupFilter_lineEdit_editingFinished()
+{
+    this->groupFilter = ui->GroupFilter_lineEdit->displayText();
+    this->loadDataForDay(ui->WeekDayBox->currentIndex());
 }

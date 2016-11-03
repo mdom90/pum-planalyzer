@@ -23,6 +23,12 @@ private slots:
     void on_btnLoadFile_pressed();
     void on_btnShowFilteredPlan_clicked();
 
+    void on_WeekDayBox_currentIndexChanged(int index);
+
+    void on_GroupFilter_lineEdit_selectionChanged();
+
+    void on_GroupFilter_lineEdit_editingFinished();
+
 private:
     Ui::MainWindow *ui;
     fileOperatinos *foInstance;
@@ -32,9 +38,14 @@ private:
     const QStringList tableHeaders = {"Od", "Do", "Przemdiot", "Rodzaj", "Grupa // Gdzie"};
     QString filePath;
     QString pdfFilePath;
+    QString groupFilter;
 
     void updatePlanList();
     void uiConfigTable();
+    void initDayFilter();
+    void configGroupFilter();
+    void loadDataForDay(int iDayIndex);
+    void cleanTableData();
 };
 
 #endif // MAINWINDOW_H

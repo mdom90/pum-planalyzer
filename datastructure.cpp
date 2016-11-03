@@ -4,15 +4,12 @@
 dataStructure::dataStructure()
 {
     foInstance = &fileOperatinos::foGetInstance();
-//    for(int iDayIter = MON; iDayIter < WEEKDAY_LASTITEM; iDayIter++)
-//    {
-//        tab_listOfStructLineElements[iDayIter] = new (std::nothrow) QList<sPlanElements>;
-//    }
 }
 
 bool dataStructure::prepareTableData()
 {
     bool fRetVal = false;
+    CleanPlanDataList();
     if(0 != foInstance )
     {
         QString strOrderData;
@@ -50,7 +47,6 @@ bool dataStructure::populateWeek(QStringList *listWeekDayOneLineData)
             }
             else
             {
-
                 fRetVal = populatWeekDayWithData(eDayIter, listWeekDayOneLineData);
             }
         }
@@ -120,7 +116,38 @@ bool dataStructure::populatWeekDayWithData(eWeekDays currentDay, QStringList *li
             }
             case GROUPS:
             {
-                sOneDayPlan.groups = listWeekDayOneLineData->at(Iter);
+                //TODO cleen up in here
+                QStringList qstrlTempGroups;
+                QStringList qstrlLineWithoutSpaces;
+                QRegularExpression regexpSpecialCase("\\d{1} [a-zA-Z]");//hit "2 grupy" "1 grupa"
+
+                if( true == listWeekDayOneLineData->at(Iter).contains(regexpSpecialCase) )
+                {
+                    sOneDayPlan.additionalInfo = listWeekDayOneLineData->at(Iter);
+                    break;
+                }
+                qstrlTempGroups = listWeekDayOneLineData->at(Iter).split(",",QString::SkipEmptyParts);
+                for(int iGroupIter = 0; iGroupIter < qstrlTempGroups.size(); iGroupIter++)
+                {
+                    qstrlTempGroups[iGroupIter] = qstrlTempGroups.at(iGroupIter).trimmed();//skip spaces from begining and end [gr, gr, gr]=>[gr,gr,gr]
+                    if( qstrlTempGroups[iGroupIter].contains(" ") )// group with street - special case
+                    {
+                        qstrlLineWithoutSpaces = qstrlTempGroups[iGroupIter].split(" ");//if spaces inside [gr (street)]=>[gr,(street)]
+                        qstrlTempGroups.clear();
+                        int iAdInfoItter = 0;
+                        if(qstrlLineWithoutSpaces[0].size() < 4)//if this is a group (assumption GROUP < 4 signs)
+                        {
+                            qstrlTempGroups.append(qstrlLineWithoutSpaces[0]);//take 1st element - group
+                            iAdInfoItter = 1;//Skip 1st element in next for
+                        }
+                        for(; iAdInfoItter < qstrlLineWithoutSpaces.size(); iAdInfoItter++)//Fill aditional info field
+                        {
+                            sOneDayPlan.additionalInfo.append(qstrlLineWithoutSpaces[iAdInfoItter]);
+                        }
+                    }
+                }
+                sOneDayPlan.groups = qstrlTempGroups.join(",");
+                sOneDayPlan.groups = sOneDayPlan.groups.toLower();
                 break;
             }
             default:
@@ -135,33 +162,69 @@ bool dataStructure::populatWeekDayWithData(eWeekDays currentDay, QStringList *li
     return fRetVal;
 }
 
-bool dataStructure::setTableData(QTableWidget *TableWidgetToFill)
+bool dataStructure::setTableData(QTableWidget *TableWidgetToFill, int iDayIndex, QString qstrValidateFilter)
 {
     bool fRetVal = false;
-    /*
-        if( 0 != TableWidgetToFill )
+
+    if( (0 != TableWidgetToFill) && (iDayIndex < WEEKDAY_LASTITEM) )
+    {
+        int iDayListSize = this->tab_listOfStructLineElements[iDayIndex].size();
+        TableWidgetToFill->setRowCount(iDayListSize);//Set table size
+        //qstrValidateFilter = "\\A" + qstrValidateFilter + "\\z";
+        QRegularExpression regexGroupFilter(qstrValidateFilter);
+
+        for(int i=0; i < iDayListSize; i++)
         {
-            TableWidgetToFill->setRowCount(this->list_sPlanElements.size());
-            for(int i=0; i < this->list_sPlanElements.size(); i++)
+            if( tab_listOfStructLineElements[iDayIndex].at(i).groups.contains(regexGroupFilter) ) // filter groups
             {
-                TableWidgetToFill->setItem(i, START_TIME, new QTableWidgetItem(list_sPlanElements[i].startTime));
-                TableWidgetToFill->setItem(i, FINISH_TIME, new QTableWidgetItem(list_sPlanElements[i].finishTime));
-                TableWidgetToFill->setItem(i, SUBJECT_NAME, new QTableWidgetItem(list_sPlanElements[i].subjectName));
-                TableWidgetToFill->setItem(i, SUBJECT_TYPE, new QTableWidgetItem(list_sPlanElements[i].subjectType));
-                TableWidgetToFill->setItem(i, GROUPS, new QTableWidgetItem(list_sPlanElements[i].groups));
+                TableWidgetToFill->setItem(i, START_TIME, new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).startTime));
+                TableWidgetToFill->setItem(i, FINISH_TIME, new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).finishTime));
+                TableWidgetToFill->setItem(i, SUBJECT_NAME, new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).subjectName));
+                TableWidgetToFill->setItem(i, SUBJECT_TYPE, new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).subjectType));
+
+                QTableWidgetItem *qtwiGroup = new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).groups);
+                if( (false == tab_listOfStructLineElements[iDayIndex].at(i).additionalInfo.isEmpty()) ||
+                        ((true == tab_listOfStructLineElements[iDayIndex].at(i).groups.isEmpty()) && (false == tab_listOfStructLineElements[iDayIndex].at(i).additionalInfo.isEmpty()))
+                  )
+                {
+                    qtwiGroup->setBackgroundColor(Qt::red);
+                    qtwiGroup->setToolTip(tab_listOfStructLineElements[iDayIndex].at(i).additionalInfo);
+                }
+                TableWidgetToFill->setItem(i, GROUPS, qtwiGroup);
+                qtwiGroup = 0;
             }
         }
-        else
-        {
-            qWarning() << "Null TableWidget in setTableData()";
-        }
-    */
+    }
+    else
+    {
+        qWarning() << "Null TableWidget in setTableData()";
+    }
+
     return fRetVal;
 }
 
 bool dataStructure::findAvaliableGroups()
 {
     bool fRetVal = false;
+    QStringList qstrlTempGroups;
+    QStringList qstrlLineWithoutSpaces;
+    QString qstrIsItGroup;
+    QRegularExpression regexp(".{1,4}");
+    for(int iDay = MON; iDay < WEEKDAY_LASTITEM; iDay++)
+    {
+        for(int i=0; i < this->tab_listOfStructLineElements[iDay].size(); i++)
+        {
+            qstrlTempGroups = tab_listOfStructLineElements[iDay].at(i).groups.split(",",QString::SkipEmptyParts);
+            for(int iGroupIter = 0; iGroupIter < qstrlTempGroups.size(); iGroupIter++)
+            {
+                if( false == qstrl_avaliableGroups.contains(qstrlTempGroups.at(iGroupIter),Qt::CaseInsensitive) )//check if group is already in list
+                {
+                    qstrl_avaliableGroups.append(qstrlTempGroups.at(iGroupIter));
+                }
+            }
+        }
+    }
+    qstrl_avaliableGroups.sort();
 
     return fRetVal;
 }
@@ -174,7 +237,33 @@ void dataStructure::testShowData()
         for(int i=0; i < this->tab_listOfStructLineElements[iDay].size(); i++)
         {
             qDebug() << "Od: " << this->tab_listOfStructLineElements[iDay].at(i).startTime << "Do: " << this->tab_listOfStructLineElements[iDay].at(i).finishTime \
-                     << "Sub: " << this->tab_listOfStructLineElements[iDay].at(i).subjectName << "Group: " << this->tab_listOfStructLineElements[iDay].at(i).groups;
+                     << "Sub: " << this->tab_listOfStructLineElements[iDay].at(i).subjectName << "Group: " << this->tab_listOfStructLineElements[iDay].at(i).groups \
+                     << "Ad. info: " << this->tab_listOfStructLineElements[iDay].at(i).additionalInfo;
         }
+    }
+    qDebug() << "Avaliable groups: ";
+    for(int iGroupIter = 0; iGroupIter < qstrl_avaliableGroups.size(); iGroupIter++)
+    {
+        qDebug() << qstrl_avaliableGroups.at(iGroupIter);
+    }
+}
+
+QStringList dataStructure::getListWeekDays()
+{
+    QStringList qstrlWeekDays;
+    for(int iDay = MON; iDay < WEEKDAY_LASTITEM; iDay++)
+    {
+        qstrlWeekDays << tab_strWeekDays[iDay];
+    }
+
+    return qstrlWeekDays;
+}
+
+void dataStructure::CleanPlanDataList()
+{
+    qstrl_avaliableGroups.clear();
+    for(int iListIter = MON; iListIter < WEEKDAY_LASTITEM; iListIter++)
+    {
+        tab_listOfStructLineElements[iListIter].clear();
     }
 }

@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>pumPlanalyser</string>
   </property>
   <property name="accessibleName">
    <string>instanceMainWindow</string>
@@ -50,6 +50,11 @@
         <height>30</height>
        </size>
       </property>
+      <property name="source">
+       <url>
+        <string>file:///C:/Programowanie/Qt/Projects/build-pumPlanalyzer-Desktop_Qt_5_7_0_MinGW_32bit-Debug/debug/pdfconvert/path.txt</string>
+       </url>
+      </property>
       <property name="openLinks">
        <bool>false</bool>
       </property>
@@ -69,48 +74,94 @@
       </property>
      </widget>
     </item>
-    <item>
-     <widget class="QComboBox" name="WeekDayBox">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>130</width>
-        <height>20</height>
-       </size>
-      </property>
-      <property name="editable">
+    <item alignment="Qt::AlignLeft">
+     <widget class="QGroupBox" name="groupBox">
+      <property name="enabled">
        <bool>true</bool>
       </property>
-      <property name="currentText">
-       <string>choose day</string>
-      </property>
-      <property name="maxVisibleItems">
-       <number>7</number>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLineEdit" name="GroupFilter_lineEdit">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
       <property name="minimumSize">
        <size>
-        <width>200</width>
-        <height>0</height>
+        <width>0</width>
+        <height>60</height>
        </size>
       </property>
-      <property name="text">
-       <string>Groups separated by | (i.e S1|A,kl1 )</string>
+      <property name="layoutDirection">
+       <enum>Qt::LeftToRight</enum>
       </property>
+      <property name="title">
+       <string>Filter</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QComboBox" name="WeekDayBox">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>130</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="editable">
+          <bool>false</bool>
+         </property>
+         <property name="currentText">
+          <string/>
+         </property>
+         <property name="maxVisibleItems">
+          <number>7</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="GroupFilter_lineEdit">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>200</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Groups separated by | (i.e S1|A,kl1 )</string>
+         </property>
+         <property name="clearButtonEnabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
     <item>
