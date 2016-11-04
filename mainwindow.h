@@ -30,6 +30,8 @@ private slots:
     void on_GroupCheckBox_itemChanged(QListWidgetItem * item);
     void on_CleanGroupCheckBtn_onClick(bool fClicked);
 
+    void on_LoadedFileTextBrowser_textChanged();
+
 private:
     Ui::MainWindow *ui;
     fileOperatinos *foInstance;
@@ -50,6 +52,7 @@ private:
     void initDayFilter();
     void loadDataForDay(int iDayIndex);
     void cleanTableData();
+    void cleanListWidget();//groups
 
     QGroupBox *createCheckboxGroupsView();
 };

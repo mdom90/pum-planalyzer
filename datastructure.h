@@ -23,13 +23,15 @@ public:
     QStringList getGroupsNamesList();
 
     void testShowData();
+    void CleanData();
 
 private:
     //Avoid copy of singleton
     dataStructure(fileOperatinos &);      // Don't Implement
     void operator=(fileOperatinos const&); // Don't implement
 
-    enum eStructElements { START_TIME=0, FINISH_TIME, SUBJECT_NAME, SUBJECT_TYPE, GROUPS, DATA_LAST_ITEM };
+    enum eStructElements { START_TIME=0, SEPARATOR, FINISH_TIME, SUBJECT_NAME, SUBJECT_TYPE, GROUPS, DATA_LAST_ITEM };
+    enum eTableOrder { T_START_TIME=0, T_FINISH_TIME, T_SUBJECT_NAME, T_SUBJECT_TYPE, T_GROUPS, T_DATA_LAST_ITEM };
     struct sPlanElements
     {
         QString startTime;
@@ -49,6 +51,7 @@ private:
     eWeekDays whichDay(QStringList *listToAnalyse);
     bool populatWeekDayWithData(eWeekDays currentDay, QStringList *listWeekDayOneLineData);
     void CleanPlanDataList();
+    void CleanAvaliableGroups();
     bool shouldDisplaySubject(QStringList pqstrlGroupList, QStringList pqstrlFilters);
 
 };

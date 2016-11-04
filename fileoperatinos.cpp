@@ -5,7 +5,7 @@
 #include <QCoreApplication>
 
 #define NEW_LINE_OFFSET 2
-#define REGEXP_SPLIT_COLUMN "\\s{2,}" //match at least 2 white spaces
+#define REGEXP_SPLIT_COLUMN " {2,}" //match at least 2 white spaces
 
 inline eAppendType operator|(eAppendType a, eAppendType b)
 {
@@ -143,6 +143,12 @@ bool fileOperatinos::foProcessFileAnalysis(QTextStream *in)
                 fRetVal = foAnalyzeLine();
                 break;
             }
+            case STOP_ANALYSE:
+            {
+                in->readAll();
+                in->flush();
+                break;
+            }
             default:
             {
                 qWarning() << "Warning case default!!";
@@ -277,7 +283,7 @@ bool fileOperatinos::foRemoveUnecessarySigns(QString *qstrlLineToCleanUp)
 
     if( (0 != qstrlLineToCleanUp) )
     {
-        QRegularExpression regexp_unnecesarysigns("\f|-");
+        QRegularExpression regexp_unnecesarysigns("\f");
         qstrlLineToCleanUp->replace(regexp_unnecesarysigns,"");
         fRetVal = true;
     }
@@ -300,7 +306,7 @@ bool fileOperatinos::foShouldAnalyseLine(eAnalyse *enumSaveData)
         }
         if( qstrAnalyse->contains("UWAGI", Qt::CaseInsensitive) )//Finish analysing interesting data
         {
-            *enumSaveData = DONT_ANALYSE;
+            *enumSaveData = STOP_ANALYSE;
             enumSaveDataLastState = *enumSaveData; //set to continue in Continue last mode
             fRetVal = true;
         }

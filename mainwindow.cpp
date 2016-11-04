@@ -21,7 +21,10 @@ MainWindow::MainWindow(QWidget *parent) :
     foInstance = &fileOperatinos::foGetInstance();
     dataInstance = &dataStructure::dsGetInstance();
     initDayFilter();
-    groupBox = 0;
+
+    groupBox = new QGroupBox(tr("Avaliable groups checkboxes"));
+    groupBox->setFlat(true);
+
     listWidget = new QListWidget(this);
     listWidget->setVisible(false);
     connect(listWidget, SIGNAL(itemChanged(QListWidgetItem *)), this, SLOT(on_GroupCheckBox_itemChanged(QListWidgetItem *)));
@@ -56,6 +59,7 @@ void MainWindow::on_btnLoadFile_pressed()
             ui->LoadedFileTextBrowser->setPlainText(filePath);
             pdfFilePath = filePath;
         }
+        ui->btnLoadFile->setEnabled(false);
     }
 }
 
@@ -64,6 +68,9 @@ void MainWindow::on_btnShowFilteredPlan_clicked()
     //Instance of fileOperaion
     //bool fResult = false;
     cleanTableData();
+    cleanListWidget();
+    ui->btnShowFilteredPlan->setEnabled(false);
+    dataInstance->CleanData();
     foInstance->foPrepareFiles(this->pdfFilePath);
     dataInstance->prepareTableData();
     dataInstance->findAvaliableGroups();
@@ -72,7 +79,6 @@ void MainWindow::on_btnShowFilteredPlan_clicked()
     ui->WeekDayBox->setEnabled(true);
     if( 0 != ui->tableWidget )
     {
-        //dataInstance->setTableData(ui->tableWidget, dataStructure::MON, this->groupFilter);
         updatePlanList();
     }
     else
@@ -128,11 +134,8 @@ void MainWindow::cleanTableData()
 
 QGroupBox *MainWindow::createCheckboxGroupsView()
 {
-    if(0 == groupBox)
+    if( 0 == listWidget->count() )
     {
-        groupBox = new QGroupBox(tr("Avaliable groups checkboxes"));
-        groupBox->setFlat(true);
-
         QStringList groupLabels = dataInstance->getGroupsNamesList();
         QStringListIterator it(groupLabels);
         QVBoxLayout *vbox = new QVBoxLayout;
@@ -197,4 +200,21 @@ void MainWindow::on_CleanGroupCheckBtn_onClick(bool fClicked)
         item->setCheckState(Qt::Unchecked);
     }
     qDebug() << "btn click execute";
+}
+
+void MainWindow::cleanListWidget()
+{
+    if( 0 != listWidget )
+    {
+        for(int iIter = 0; iIter < listWidget->count(); iIter++)
+        {
+            QListWidgetItem* item = listWidget->item(iIter);
+            delete item;
+        }
+    }
+}
+
+void MainWindow::on_LoadedFileTextBrowser_textChanged()
+{
+    ui->btnShowFilteredPlan->setEnabled(true);
 }

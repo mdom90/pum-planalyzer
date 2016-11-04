@@ -182,10 +182,10 @@ bool dataStructure::setTableData(QTableWidget *TableWidgetToFill, int iDayIndex,
         {
             if( shouldDisplaySubject(tab_listOfStructLineElements[iDayIndex].at(i).groups, qstrlValidateFilter) ) // filter groups
             {
-                TableWidgetToFill->setItem(iTablePosition, START_TIME, new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).startTime));
-                TableWidgetToFill->setItem(iTablePosition, FINISH_TIME, new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).finishTime));
-                TableWidgetToFill->setItem(iTablePosition, SUBJECT_NAME, new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).subjectName));
-                TableWidgetToFill->setItem(iTablePosition, SUBJECT_TYPE, new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).subjectType));
+                TableWidgetToFill->setItem(iTablePosition, T_START_TIME, new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).startTime));
+                TableWidgetToFill->setItem(iTablePosition, T_FINISH_TIME, new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).finishTime));
+                TableWidgetToFill->setItem(iTablePosition, T_SUBJECT_NAME, new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).subjectName));
+                TableWidgetToFill->setItem(iTablePosition, T_SUBJECT_TYPE, new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).subjectType));
 
                 QTableWidgetItem *qtwiGroup = new QTableWidgetItem(tab_listOfStructLineElements[iDayIndex].at(i).groups.join(","));
                 if( (false == tab_listOfStructLineElements[iDayIndex].at(i).additionalInfo.isEmpty()) ||
@@ -195,7 +195,7 @@ bool dataStructure::setTableData(QTableWidget *TableWidgetToFill, int iDayIndex,
                     qtwiGroup->setBackgroundColor(Qt::red);
                     qtwiGroup->setToolTip(tab_listOfStructLineElements[iDayIndex].at(i).additionalInfo);
                 }
-                TableWidgetToFill->setItem(iTablePosition, GROUPS, qtwiGroup);
+                TableWidgetToFill->setItem(iTablePosition, T_GROUPS, qtwiGroup);
                 qtwiGroup = 0;
                 iTablePosition++;
             }
@@ -307,4 +307,15 @@ bool dataStructure::shouldDisplaySubject(QStringList pqstrlGroupList, QStringLis
         }
     }
     return fRetVal;
+}
+
+void dataStructure::CleanAvaliableGroups()
+{
+    qstrl_avaliableGroups.clear();
+}
+
+void dataStructure::CleanData()
+{
+    CleanAvaliableGroups();
+    CleanPlanDataList();
 }

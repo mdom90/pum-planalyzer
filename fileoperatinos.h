@@ -36,7 +36,7 @@ private:
     QString strPdfConverterPath; // main + pdfconvert/pdftotext.exe
 
     //Data type
-    enum eAnalyse {DONT_ANALYSE = 0, ANALYSE = 1, PREVIOUS_STATE = 2, LAST_ITEM = 3};
+    enum eAnalyse {DONT_ANALYSE = 0, ANALYSE = 1, PREVIOUS_STATE = 2, STOP_ANALYSE = 3, LAST_ITEM = 4};
 
     //Variables for line analysis
     QString qstrCurrentLine;
