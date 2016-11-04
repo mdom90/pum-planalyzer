@@ -42,7 +42,7 @@ private:
 
     fileOperatinos *foInstance;
     QStringList qstrl_avaliableGroups;
-    const QString tab_strWeekDays[WEEKDAY_LASTITEM] = {"poniedzialek", "wtorek", "sroda", "czwartek", "piatek", "sobota", "niedziela"};
+    const QString tab_strWeekDays[WEEKDAY_LASTITEM] = {"poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota", "niedziela"};
     QList <sPlanElements> tab_listOfStructLineElements[WEEKDAY_LASTITEM];
 
     bool populateWeek(QStringList *listWeekDayOneLineData);

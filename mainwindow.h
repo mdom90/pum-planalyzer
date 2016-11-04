@@ -35,6 +35,7 @@ private:
     fileOperatinos *foInstance;
     dataStructure *dataInstance;
     QListWidget *listWidget;
+    QGroupBox *groupBox;
     QList<QListWidgetItem *> qlstSelectedGroups;
     QPushButton *CleanGroupCheckBtn;
 

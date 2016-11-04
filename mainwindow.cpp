@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
     foInstance = &fileOperatinos::foGetInstance();
     dataInstance = &dataStructure::dsGetInstance();
     initDayFilter();
+    groupBox = 0;
     listWidget = new QListWidget(this);
     listWidget->setVisible(false);
     connect(listWidget, SIGNAL(itemChanged(QListWidgetItem *)), this, SLOT(on_GroupCheckBox_itemChanged(QListWidgetItem *)));
@@ -67,12 +68,12 @@ void MainWindow::on_btnShowFilteredPlan_clicked()
     dataInstance->prepareTableData();
     dataInstance->findAvaliableGroups();
     ui->horizontalLayout->addWidget(createCheckboxGroupsView());
-
     dataInstance->testShowData();
     ui->WeekDayBox->setEnabled(true);
     if( 0 != ui->tableWidget )
     {
-        dataInstance->setTableData(ui->tableWidget, dataStructure::MON, this->groupFilter);
+        //dataInstance->setTableData(ui->tableWidget, dataStructure::MON, this->groupFilter);
+        updatePlanList();
     }
     else
     {
@@ -127,24 +128,33 @@ void MainWindow::cleanTableData()
 
 QGroupBox *MainWindow::createCheckboxGroupsView()
 {
-    QGroupBox *groupBox = new QGroupBox(tr("Avaliable groups checkboxes"));
-    groupBox->setFlat(true);
-
-    QStringList groupLabels = dataInstance->getGroupsNamesList();
-    QStringListIterator it(groupLabels);
-    QVBoxLayout *vbox = new QVBoxLayout;
-    while( it.hasNext() )
+    if(0 == groupBox)
     {
-        QListWidgetItem *listItem = new QListWidgetItem(it.next(),this->listWidget);
-        listItem->setCheckState(Qt::Unchecked);
-        listWidget->addItem(listItem);
+        groupBox = new QGroupBox(tr("Avaliable groups checkboxes"));
+        groupBox->setFlat(true);
+
+        QStringList groupLabels = dataInstance->getGroupsNamesList();
+        QStringListIterator it(groupLabels);
+        QVBoxLayout *vbox = new QVBoxLayout;
+        while( it.hasNext() )
+        {
+            QListWidgetItem *listItem = new QListWidgetItem(it.next(),this->listWidget);
+            listItem->setCheckState(Qt::Unchecked);
+            listWidget->addItem(listItem);
+        }
+        listWidget->setFixedHeight(200);
+        vbox->addWidget(listWidget);
+        vbox->addWidget(CleanGroupCheckBtn);
+        //vbox->addStretch(1);
+        vbox->setSpacing(0);
+        vbox->setMargin(0);
+        vbox->setContentsMargins(0,0,0,0);
+
+        groupBox->setLayout(vbox);
+        listWidget->setVisible(true);
+        CleanGroupCheckBtn->setVisible(true);
     }
-    vbox->addWidget(listWidget);
-    vbox->addWidget(CleanGroupCheckBtn);
-    vbox->addStretch(1);
-    groupBox->setLayout(vbox);
-    listWidget->setVisible(true);
-    CleanGroupCheckBtn->setVisible(true);
+
 
     return groupBox;
 }

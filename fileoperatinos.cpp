@@ -62,12 +62,17 @@ bool fileOperatinos::foConvertPdf(QString strPdfFilePath)
 
         if( 0 != myProcess )
         {
+            qDebug() << "foConvertPdf() start pdftotex:" << strPdfConverterPath << arguments;
             myProcess->execute(this->strPdfConverterPath, arguments);
             myProcess->waitForFinished(q16maxProcTime);
             qDebug() << "end: " << myProcess->exitStatus();
             delete myProcess;
             fRetVal = true;
         }
+    }
+    else
+    {
+        qWarning() << "foConvertPdf() PdfFilePath is empty";
     }
 
     return fRetVal;
@@ -102,6 +107,7 @@ bool fileOperatinos::foConvertTextFile(QString strTxtFilePath)
 
         QRegularExpression regex(" {2,}");//match at least 2 white spaces
         QStringList MainBufferList = qstrMainBuffer.split(regex, QString::SkipEmptyParts);
+        out.setCodec("UTF-8");
         out << MainBufferList.join(";"); //Insert converted data in to file
         outputFile.close();
         inputFile.close();

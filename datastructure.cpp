@@ -63,7 +63,12 @@ dataStructure::eWeekDays dataStructure::whichDay(QStringList *listToAnalyse)
         QString qstrDayFromList = "";
         for( iDayIter = MON; iDayIter < WEEKDAY_LASTITEM; iDayIter++ )
         {
-            if( (0 == this->tab_strWeekDays[iDayIter].compare(listToAnalyse->at(0), Qt::CaseInsensitive)) ) //compare data from order file with week days
+            QString qstrCompare1 = tab_strWeekDays[iDayIter];
+            QString qstrCompare2 = listToAnalyse->at(0);
+            int iCompareResult = qstrCompare1.compare(qstrCompare2, Qt::CaseInsensitive);
+            qDebug() << "WhichDay() compare: " << tab_strWeekDays[iDayIter] << listToAnalyse->at(0) << "res:" << iCompareResult;
+
+            if( 0 == iCompareResult ) //compare data from order file with week days
             {
                 qDebug() << "WhichDay() iter: " << tab_strWeekDays[iDayIter];
                 break;
